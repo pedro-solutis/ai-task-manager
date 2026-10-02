@@ -1,6 +1,8 @@
 package br.com.solutis.backend.service;
 
 import br.com.solutis.backend.domain.entity.Task;
+import br.com.solutis.backend.domain.enums.TaskPriority;
+import br.com.solutis.backend.domain.enums.TaskStatus;
 import br.com.solutis.backend.dto.TaskCreationDTO;
 import br.com.solutis.backend.dto.TaskResponseDTO;
 import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
@@ -36,7 +38,8 @@ public class TaskService {
 
     @Transactional
     public TaskResponseDTO create(TaskCreationDTO dto) {
-        Task task = new Task(dto.title(), dto.description(), dto.status(), dto.priority(), dto.dueDate());
+        TaskPriority priority = dto.priority() != null ? TaskPriority.valueOf(dto.priority().toUpperCase()) : null;
+        Task task = new Task(dto.title(), dto.description(), priority, dto.dueDate());
         
         if (dto.parentTaskId() != null) {
             Task parent = taskRepository.findById(dto.parentTaskId())
@@ -53,14 +56,15 @@ public class TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
         
-        task.updateDetails(dto.title(), dto.description(), dto.priority(), dto.dueDate());
+        TaskPriority priority = dto.priority() != null ? TaskPriority.valueOf(dto.priority().toUpperCase()) : null;
+        task.updateDetails(dto.description(), priority, dto.dueDate());
         
         if (dto.parentTaskId() != null) {
             Task parent = taskRepository.findById(dto.parentTaskId())
                     .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + dto.parentTaskId()));
             task.assignParent(parent);
         }
-        
+
         task = taskRepository.save(task);
         return mapToResponse(task);
     }
@@ -77,7 +81,10 @@ public class TaskService {
     public TaskResponseDTO updateStatus(UUID id, TaskStatusUpdateDTO status) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
-        task.updateStatus(status.status());
+        TaskStatus newStatus = status.status() != null ? TaskStatus.valueOf(status.status().toUpperCase()) : null;
+        if (newStatus != null) {
+            task.updateStatus(newStatus);
+        }
         task = taskRepository.save(task);
         return mapToResponse(task);
     }
