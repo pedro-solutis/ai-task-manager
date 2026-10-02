@@ -8,7 +8,6 @@ import br.com.solutis.backend.validation.ValidEnum;
 import jakarta.validation.constraints.Future;
 
 public record TaskUpdateDTO(
-    String title,
     String description,
     @ValidEnum (enumClass = TaskPriority.class, message = "Priority inválida. Valores aceitos: LOW, MEDIUM, HIGH")
     String priority,
