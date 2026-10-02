@@ -61,32 +61,29 @@ public class Task {
     @Column (name = "deleted", nullable = false)
     private Boolean deleted = false;
 
-    public Task(String title, String description, String status, String priority, LocalDateTime dueDate) {
+    public Task(String title, String description, TaskPriority priority, LocalDateTime dueDate) {
         this.title = title;
         this.description = description;
-        this.status = status != null ? TaskStatus.valueOf(status.toUpperCase()) : TaskStatus.TODO;
-        this.priority = priority != null ? TaskPriority.valueOf(priority.toUpperCase()) : TaskPriority.MEDIUM;
+        this.status = TaskStatus.TODO;
+        this.priority = priority != null ? priority : TaskPriority.MEDIUM;
         this.dueDate = dueDate;
     }
 
-    public void updateDetails(String title, String description, String priority, LocalDateTime dueDate) {
-        if(title != null) this.title = title;
+    public void updateDetails(String description, TaskPriority priority, LocalDateTime dueDate) {
         if(description != null) this.description = description;
-        if(priority != null) this.priority = TaskPriority.valueOf(priority.toUpperCase());
+        if(priority != null) this.priority = priority;
         if(dueDate != null) this.dueDate = dueDate;
     }
 
     public void assignParent(Task parentTask) {
-        if (parentTask != null && parentTask.getId().equals(this.id)) {
+        if (this.id != null && parentTask != null && parentTask.getId().equals(this.id)) {
             throw new IllegalArgumentException("A task cannot be its own parent.");
         }
         this.parentTask = parentTask;
     }
 
-    public void updateStatus(String newStatusStr) {
-        if (newStatusStr == null) return;
-        
-        TaskStatus newStatus = TaskStatus.valueOf(newStatusStr.toUpperCase());
+    public void updateStatus(TaskStatus newStatus) {
+        if (newStatus == null) return;
 
         if (this.status == newStatus) return;
 
