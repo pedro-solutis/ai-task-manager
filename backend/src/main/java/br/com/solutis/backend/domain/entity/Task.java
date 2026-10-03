@@ -3,6 +3,8 @@ package br.com.solutis.backend.domain.entity;
 import br.com.solutis.backend.domain.enums.TaskPriority;
 import br.com.solutis.backend.domain.enums.TaskStatus;
 
+import br.com.solutis.backend.exception.CircularHierarchyException;
+import br.com.solutis.backend.exception.InvalidTaskTransitionException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -77,7 +79,7 @@ public class Task {
 
     public void assignParent(Task parentTask) {
         if (this.id != null && parentTask != null && parentTask.getId().equals(this.id)) {
-            throw new IllegalArgumentException("A task cannot be its own parent.");
+            throw new CircularHierarchyException("A task cannot be its own parent.");
         }
         this.parentTask = parentTask;
     }
@@ -88,15 +90,15 @@ public class Task {
         if (this.status == newStatus) return;
 
         if (this.status == TaskStatus.DONE) {
-            throw new IllegalStateException("A completed task (DONE) cannot have its status changed.");
+            throw new InvalidTaskTransitionException("A completed task (DONE) cannot have its status changed.");
         }
 
         if (this.status == TaskStatus.TODO && newStatus != TaskStatus.IN_PROGRESS) {
-            throw new IllegalStateException("A TODO task can only be advanced to IN_PROGRESS.");
+            throw new InvalidTaskTransitionException("A TODO task can only be advanced to IN_PROGRESS.");
         }
 
         if (this.status == TaskStatus.IN_PROGRESS && newStatus != TaskStatus.DONE) {
-            throw new IllegalStateException("A IN_PROGRESS task can only be completed to DONE.");
+            throw new InvalidTaskTransitionException("A IN_PROGRESS task can only be completed to DONE.");
         }
 
         this.status = newStatus;
