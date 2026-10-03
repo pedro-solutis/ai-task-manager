@@ -3,6 +3,7 @@ package br.com.solutis.backend.service;
 import br.com.solutis.backend.domain.entity.Task;
 import br.com.solutis.backend.domain.enums.TaskPriority;
 import br.com.solutis.backend.domain.enums.TaskStatus;
+import br.com.solutis.backend.dto.ParentTaskUpdateDTO;
 import br.com.solutis.backend.dto.TaskCreationDTO;
 import br.com.solutis.backend.dto.TaskResponseDTO;
 import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
@@ -58,12 +59,6 @@ public class TaskService {
         
         TaskPriority priority = dto.priority() != null ? TaskPriority.valueOf(dto.priority().toUpperCase()) : null;
         task.updateDetails(dto.description(), priority, dto.dueDate());
-        
-        if (dto.parentTaskId() != null) {
-            Task parent = taskRepository.findById(dto.parentTaskId())
-                    .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + dto.parentTaskId()));
-            task.assignParent(parent);
-        }
 
         task = taskRepository.save(task);
         return mapToResponse(task);
@@ -85,6 +80,23 @@ public class TaskService {
         if (newStatus != null) {
             task.updateStatus(newStatus);
         }
+        task = taskRepository.save(task);
+        return mapToResponse(task);
+    }
+
+    @Transactional
+    public TaskResponseDTO updateParent(UUID taskId, ParentTaskUpdateDTO dto) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
+
+        if (dto.parentTaskId() != null) {
+            Task parentTask = taskRepository.findById(dto.parentTaskId())
+                    .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + dto.parentTaskId()));
+            task.assignParent(parentTask);
+        } else {
+            task.assignParent(null);
+        }
+
         task = taskRepository.save(task);
         return mapToResponse(task);
     }

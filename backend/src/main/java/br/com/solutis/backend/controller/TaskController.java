@@ -1,5 +1,6 @@
 package br.com.solutis.backend.controller;
 
+import br.com.solutis.backend.dto.ParentTaskUpdateDTO;
 import br.com.solutis.backend.dto.TaskCreationDTO;
 import br.com.solutis.backend.dto.TaskResponseDTO;
 import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
@@ -51,6 +52,11 @@ public class TaskController {
     @PatchMapping ("/{id}/status")
     public ResponseEntity<TaskResponseDTO> updateStatus(@PathVariable("id") UUID taskId, @Valid @RequestBody TaskStatusUpdateDTO dto) {
         return ResponseEntity.ok(taskService.updateStatus(taskId, dto));
+    }
+
+    @PatchMapping ("/{id}/parent")
+    public ResponseEntity<TaskResponseDTO> updateParent(@PathVariable("id") UUID taskId, @RequestBody ParentTaskUpdateDTO dto) {
+        return ResponseEntity.ok(taskService.updateParent(taskId, dto));
     }
 
     @DeleteMapping("/{id}")
