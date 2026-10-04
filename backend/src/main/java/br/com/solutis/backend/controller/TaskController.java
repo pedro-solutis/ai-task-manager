@@ -6,6 +6,9 @@ import br.com.solutis.backend.dto.TaskResponseDTO;
 import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
 import br.com.solutis.backend.dto.TaskUpdateDTO;
 import br.com.solutis.backend.service.TaskService;
+import br.com.solutis.backend.dto.TaskEnhancedRequestDTO;
+import br.com.solutis.backend.dto.TaskEnhancedResponseDTO;
+import br.com.solutis.backend.service.AiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +29,8 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
+
+    private final AiService aiService;
 
     @GetMapping
     public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.DESC) Pageable pageable) {
@@ -55,7 +60,7 @@ public class TaskController {
     }
 
     @PatchMapping ("/{id}/parent")
-    public ResponseEntity<TaskResponseDTO> updateParent(@PathVariable("id") UUID taskId, @RequestBody ParentTaskUpdateDTO dto) {
+    public ResponseEntity<TaskResponseDTO> updateParent(@PathVariable("id") UUID taskId, @RequestBody @Valid ParentTaskUpdateDTO dto) {
         return ResponseEntity.ok(taskService.updateParent(taskId, dto));
     }
 
@@ -63,5 +68,10 @@ public class TaskController {
     public ResponseEntity<Void> delete(@PathVariable("id") UUID taskId) {
         taskService.delete(taskId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping ("/enhance")
+    public ResponseEntity<TaskEnhancedResponseDTO> enhanceTask(@RequestBody @Valid TaskEnhancedRequestDTO dto) {
+        return ResponseEntity.ok(aiService.enhanceTask(dto));
     }
 }
