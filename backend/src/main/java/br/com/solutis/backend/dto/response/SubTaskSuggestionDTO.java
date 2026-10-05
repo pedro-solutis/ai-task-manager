@@ -1,4 +1,4 @@
-package br.com.solutis.backend.dto;
+package br.com.solutis.backend.dto.response;
 
 import java.time.LocalDateTime;
 

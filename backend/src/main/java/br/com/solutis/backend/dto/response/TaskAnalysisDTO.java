@@ -1,4 +1,4 @@
-package br.com.solutis.backend.dto;
+package br.com.solutis.backend.dto.response;
 
 import br.com.solutis.backend.domain.enums.TaskComplexity;
 import br.com.solutis.backend.domain.enums.TaskPriority;
