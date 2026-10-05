@@ -66,12 +66,12 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping ("/{id}/enhance")
+    @PostMapping ("/{id}/enhance")
     public ResponseEntity<TaskEnhancedResponseDTO> enhanceById(@PathVariable("id") UUID taskId) {
         return ResponseEntity.ok(taskAiFacade.enhanceById(taskId));
     }
 
-    @GetMapping ("/{id}/analyze")
+    @PostMapping ("/{id}/analyze")
     public ResponseEntity<TaskAnalysisDTO> analyzeById(@PathVariable("id") UUID taskId) {
         return ResponseEntity.ok(taskAiFacade.analyzeById(taskId));
     }
