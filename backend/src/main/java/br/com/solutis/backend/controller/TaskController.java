@@ -73,9 +73,11 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping ("/enhance")
-    public ResponseEntity<TaskEnhancedResponseDTO> enhanceTask(@RequestBody @Valid TaskAiRequestDTO dto) {
-        return ResponseEntity.ok(aiService.enhanceTask(dto));
+    @GetMapping ("/{id}/enhance")
+    public ResponseEntity<TaskEnhancedResponseDTO> enhanceTask(@PathVariable("id") UUID taskId) {
+        TaskResponseDTO task = taskService.findById(taskId);
+        TaskAiRequestDTO requestDTO = new TaskAiRequestDTO(task.title(), task.description(), task.dueDate());
+        return ResponseEntity.ok(aiService.enhanceTask(requestDTO));
     }
 
     @GetMapping ("/{id}/analyze")

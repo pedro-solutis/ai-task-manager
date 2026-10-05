@@ -20,19 +20,25 @@ public class AiService {
     private final AiModelAdapter aiModelAdapter;
 
     public TaskEnhancedResponseDTO enhanceTask(TaskAiRequestDTO taskAiRequestDTO) {
-        String prompt = String.format(
-            "Consider the following task.\n" +
-            "Title: %s\n" +
-            "Description: %s\n" +
-            "Enhance the description of the task to make it more detailed and engaging. " +
-            "The new description should be more detailed and engaging, providing clear instructions and the context of the task. " +
-            "The description should be clear, concise, and easy to understand, providing all the necessary information for the task to be completed successfully. " +
-            "Must be in Portuguese and use a professional tone, using technical terms when necessary. " +
-            "Do not change the title, only enhance the description.\n\n" +
-            "CRITICAL: You MUST return the result EXCLUSIVELY as a raw JSON object containing exactly two keys: \"title\" and \"description\". " +
-            "Do NOT wrap the JSON in markdown blocks (like ```json), just return the pure JSON.",
-            taskAiRequestDTO.title(),
-            taskAiRequestDTO.description()
+        String prompt = """
+        Refine and enhance the provided task title and description into a clear, concise, and professional version.
+
+        Rules:
+        1. Language: Generate the output `title` and `description` in the exact same language used in the input.
+        2. Scope & Clarity:
+           - `title`: Keep it concise, actionable, and aligned with the enhanced description.
+           - `description`: Rewrite into a brief, direct, and professional scope of work. Avoid fluff, conversational fillers, or excessive verbosity.
+        3. Return a valid JSON object strictly adhering to the schema with properties `title` and `description`.
+        4. Output pure JSON only. Do not include markdown formatting, backticks, or comments.
+
+        Input:
+        - Title: %s
+        - Description: %s
+        - Due Date: %s
+        """.formatted(
+                taskAiRequestDTO.title(),
+                taskAiRequestDTO.description(),
+                taskAiRequestDTO.dueDate()
         );
         String result = aiModelAdapter.generateText(prompt);
         TaskEnhancedResponseDTO response = formatEnhancedResponse(result, TaskEnhancedResponseDTO.class);
