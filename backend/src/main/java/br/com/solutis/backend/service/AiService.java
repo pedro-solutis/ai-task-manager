@@ -46,21 +46,29 @@ public class AiService {
     }
 
     public TaskAnalysisDTO analyzeTask(TaskAiRequestDTO taskRequestDTO) {
-        String prompt = String.format(
-            "Analyze the following task.\n"+
-            "Title: %s\n" +
-            "Description: %s\n" +
-            "Considering the title and description, provide a detailed analysis of the task."+
-            "The analysis should include the following information:\n" +
-            "1. Priority: rate the priority of the task (LOW, MEDIUM, HIGH)\n"+
-            "2. Complexity: rate the complexity of the task (LOW, MEDIUM, HIGH)\n" +
-            "3. Estimated Hours: provide an estimated time to complete the task in whole hours (integer)\n" +
-            "4. Analysis Reason: provide a brief explanation for the priority, complexity, and estimated time.\n" +
-            "The reason must be in Portuguese and should be concise and directly related to the task's requirements.\n" +
-            "CRITICAL: You MUST return the result EXCLUSIVELY as a raw JSON object containing exactly four keys: \"priority\", \"complexity\", \"estimatedHours\", and \"analysisReason\". " +
-            "Do NOT wrap the JSON in markdown blocks (like ```json), just return the pure JSON.",
-            taskRequestDTO.title(),
-            taskRequestDTO.description()
+        String prompt = """
+        Analyze the provided task based on its title, description, and due date to evaluate priority, complexity, required effort, and rationale.
+
+        Rules:
+        1. Language: Generate the `analysisReason` in the exact same language used in the input title and description.
+        2. Field Specifications:
+           - `priority`: Recommended priority matching TaskPriority enum: "LOW", "MEDIUM" or "HIGH". Evaluate urgency based on the due date and scope impact.
+           - `complexity`: Complexity assessment matching TaskComplexity enum: "LOW", "MEDIUM" or "HIGH". Base this on technical scope, unknowns, and potential dependencies described in the task.
+           - `estimatedHours`: Integer representing the estimated total hours required to complete the task. Must be greater than 0.
+           - `analysisReason`: Concise, professional justification explaining why the chosen priority, complexity, and estimated hours were assigned.
+        3. Return a valid JSON object strictly adhering to the schema with properties `priority`, `complexity`, `estimatedHours`, and `analysisReason`.
+        4. Output pure JSON only. Do not include markdown formatting, backticks, or comments.
+
+        Input:
+        - Current Timestamp: %s
+        - Title: %s
+        - Description: %s
+        - Due Date: %s
+        """.formatted(
+                LocalDateTime.now(),
+                taskRequestDTO.title(),
+                taskRequestDTO.description(),
+                taskRequestDTO.dueDate()
         );
 
         String result = aiModelAdapter.generateText(prompt);

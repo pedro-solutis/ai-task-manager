@@ -83,7 +83,7 @@ public class TaskController {
     @GetMapping ("/{id}/analyze")
     public ResponseEntity<TaskAnalysisDTO> analyzeTask(@PathVariable("id") UUID taskId) {
         TaskResponseDTO task = taskService.findById(taskId);
-        TaskAiRequestDTO taskAiRequestDTO = new TaskAiRequestDTO(task.title(), task.description(), null);
+        TaskAiRequestDTO taskAiRequestDTO = new TaskAiRequestDTO(task.title(), task.description(), task.dueDate());
         return ResponseEntity.ok(aiService.analyzeTask(taskAiRequestDTO));
     }
 
