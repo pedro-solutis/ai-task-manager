@@ -7,11 +7,9 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
 import br.com.solutis.backend.adapter.ai.AiModelAdapter;
-import br.com.solutis.backend.dto.TaskAnalysisDTO;
-import br.com.solutis.backend.dto.TaskAiRequestDTO;
-import br.com.solutis.backend.dto.TaskEnhancedResponseDTO;
+import br.com.solutis.backend.dto.request.*;
+import br.com.solutis.backend.dto.response.*;
 import br.com.solutis.backend.exception.AiResponseParsingException;
-import br.com.solutis.backend.dto.TaskDecompositionResponseDTO;
 
 @Service 
 @RequiredArgsConstructor 
@@ -19,7 +17,7 @@ public class AiService {
 
     private final AiModelAdapter aiModelAdapter;
 
-    public TaskEnhancedResponseDTO enhanceTask(TaskAiRequestDTO taskAiRequestDTO) {
+    public TaskEnhancedResponseDTO enhanceTask(TaskEnhanceRequestDTO taskRequestDTO) {
         String prompt = """
         Refine and enhance the provided task title and description into a clear, concise, and professional version.
 
@@ -34,18 +32,16 @@ public class AiService {
         Input:
         - Title: %s
         - Description: %s
-        - Due Date: %s
         """.formatted(
-                taskAiRequestDTO.title(),
-                taskAiRequestDTO.description(),
-                taskAiRequestDTO.dueDate()
+                taskRequestDTO.title(),
+                taskRequestDTO.description()
         );
         String result = aiModelAdapter.generateText(prompt);
         TaskEnhancedResponseDTO response = formatEnhancedResponse(result, TaskEnhancedResponseDTO.class);
         return response;
     }
 
-    public TaskAnalysisDTO analyzeTask(TaskAiRequestDTO taskRequestDTO) {
+    public TaskAnalysisDTO analyzeTask(TaskAnalysisRequestDTO taskRequestDTO) {
         String prompt = """
         Analyze the provided task based on its title, description, and due date to evaluate priority, complexity, required effort, and rationale.
 
@@ -64,11 +60,13 @@ public class AiService {
         - Title: %s
         - Description: %s
         - Due Date: %s
+        - Current Priority: %s
         """.formatted(
                 LocalDateTime.now(),
                 taskRequestDTO.title(),
                 taskRequestDTO.description(),
-                taskRequestDTO.dueDate()
+                taskRequestDTO.dueDate(),
+                taskRequestDTO.priority()
         );
 
         String result = aiModelAdapter.generateText(prompt);
@@ -76,7 +74,7 @@ public class AiService {
         return response;
     }
 
-    public TaskDecompositionResponseDTO decomposeTask(TaskAiRequestDTO taskRequestDTO) {
+    public TaskDecompositionResponseDTO decomposeTask(TaskDecomposeRequestDTO taskRequestDTO) {
         String prompt = """
         Decompose the provided task into actionable subtasks with incremental milestone deadlines.
 

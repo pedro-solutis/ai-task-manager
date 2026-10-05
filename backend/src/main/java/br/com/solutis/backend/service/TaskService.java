@@ -3,14 +3,11 @@ package br.com.solutis.backend.service;
 import br.com.solutis.backend.domain.entity.Task;
 import br.com.solutis.backend.domain.enums.TaskPriority;
 import br.com.solutis.backend.domain.enums.TaskStatus;
-import br.com.solutis.backend.dto.ParentTaskUpdateDTO;
-import br.com.solutis.backend.dto.TaskCreationDTO;
-import br.com.solutis.backend.dto.TaskResponseDTO;
-import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
-import br.com.solutis.backend.dto.TaskUpdateDTO;
 import br.com.solutis.backend.exception.TaskNotFoundException;
 import br.com.solutis.backend.repository.TaskRepository;
-import br.com.solutis.backend.dto.TaskDecompositionResponseDTO;
+import br.com.solutis.backend.dto.request.*;
+import br.com.solutis.backend.dto.response.*;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -110,7 +108,8 @@ public class TaskService {
 
         List<Task> subTasksToSave = decomposition.subTasks().stream().map(dto -> {
             TaskPriority priority = dto.priority() != null ? dto.priority() : TaskPriority.MEDIUM;
-            Task subTask = new Task(dto.title(), dto.description(), priority, parentTask.getDueDate());
+            LocalDateTime dueDate = dto.dueDate() != null ? dto.dueDate() : parentTask.getDueDate();
+            Task subTask = new Task(dto.title(), dto.description(), priority, dueDate);
             subTask.assignParent(parentTask);
             return subTask;
         }).toList();

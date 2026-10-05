@@ -1,16 +1,9 @@
 package br.com.solutis.backend.controller;
 
-import br.com.solutis.backend.dto.ParentTaskUpdateDTO;
-import br.com.solutis.backend.dto.TaskCreationDTO;
-import br.com.solutis.backend.dto.TaskResponseDTO;
-import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
-import br.com.solutis.backend.dto.TaskUpdateDTO;
 import br.com.solutis.backend.service.TaskService;
-import br.com.solutis.backend.dto.TaskAiRequestDTO;
-import br.com.solutis.backend.dto.TaskEnhancedResponseDTO;
-import br.com.solutis.backend.service.AiService;
-import br.com.solutis.backend.dto.TaskAnalysisDTO;
-import br.com.solutis.backend.dto.TaskDecompositionResponseDTO;
+import br.com.solutis.backend.dto.request.*;
+import br.com.solutis.backend.dto.response.*;
+import br.com.solutis.backend.facade.ai.TaskAiFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +26,7 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    private final AiService aiService;
+    private final TaskAiFacade taskAiFacade;
 
     @GetMapping
     public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.DESC) Pageable pageable) {
@@ -74,25 +67,32 @@ public class TaskController {
     }
 
     @GetMapping ("/{id}/enhance")
-    public ResponseEntity<TaskEnhancedResponseDTO> enhanceTask(@PathVariable("id") UUID taskId) {
-        TaskResponseDTO task = taskService.findById(taskId);
-        TaskAiRequestDTO requestDTO = new TaskAiRequestDTO(task.title(), task.description(), task.dueDate());
-        return ResponseEntity.ok(aiService.enhanceTask(requestDTO));
+    public ResponseEntity<TaskEnhancedResponseDTO> enhanceById(@PathVariable("id") UUID taskId) {
+        return ResponseEntity.ok(taskAiFacade.enhanceById(taskId));
     }
 
     @GetMapping ("/{id}/analyze")
-    public ResponseEntity<TaskAnalysisDTO> analyzeTask(@PathVariable("id") UUID taskId) {
-        TaskResponseDTO task = taskService.findById(taskId);
-        TaskAiRequestDTO taskAiRequestDTO = new TaskAiRequestDTO(task.title(), task.description(), task.dueDate());
-        return ResponseEntity.ok(aiService.analyzeTask(taskAiRequestDTO));
+    public ResponseEntity<TaskAnalysisDTO> analyzeById(@PathVariable("id") UUID taskId) {
+        return ResponseEntity.ok(taskAiFacade.analyzeById(taskId));
     }
 
-    @PostMapping("/{id}/decompose")
-    public ResponseEntity<List<TaskResponseDTO>> decomposeTask(@PathVariable("id") UUID taskId) {
-        TaskResponseDTO parent = taskService.findById(taskId);
-        TaskAiRequestDTO requestDTO = new TaskAiRequestDTO(parent.title(), parent.description(), parent.dueDate());
-        TaskDecompositionResponseDTO decomposition = aiService.decomposeTask(requestDTO);
-        List<TaskResponseDTO> createdSubTasks = taskService.saveDecomposedTasks(taskId, decomposition);
-        return ResponseEntity.ok(createdSubTasks);
+    @PostMapping ("/{id}/decompose")
+    public ResponseEntity<List<TaskResponseDTO>> decomposeById(@PathVariable("id") UUID taskId) {
+        return ResponseEntity.ok(taskAiFacade.decomposeById(taskId));
+    }
+
+    @PostMapping ("/enhance")
+    public ResponseEntity<TaskEnhancedResponseDTO> enhancePreview(@RequestBody @Valid TaskEnhanceRequestDTO dto) {
+        return ResponseEntity.ok(taskAiFacade.enhancePreview(dto));
+    }
+
+    @PostMapping ("/analyze")
+    public ResponseEntity<TaskAnalysisDTO> analyzePreview(@RequestBody @Valid TaskAnalysisRequestDTO dto) {
+        return ResponseEntity.ok(taskAiFacade.analyzePreview(dto));
+    }
+
+    @PostMapping ("/decompose")
+    public ResponseEntity<TaskDecompositionResponseDTO> decomposePreview(@RequestBody @Valid TaskDecomposeRequestDTO dto) {
+        return ResponseEntity.ok(taskAiFacade.decomposePreview(dto));
     }
 }
