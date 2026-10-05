@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Formato inválido no parâmetro da URL: " + ex.getName());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid type for parameter: " + ex.getName());
         problem.setTitle("Type Mismatch");
         problem.setProperty("timestamp", LocalDateTime.now());
         return problem;
@@ -65,6 +65,40 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed JSON request or missing required fields");
         problem.setTitle("Message Not Readable");
+        problem.setProperty("timestamp", LocalDateTime.now());
+        return problem;
+    }
+
+    @ExceptionHandler(AiResponseParsingException.class)
+    public ProblemDetail handleAiResponseParsingException(AiResponseParsingException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to parse AI response: " + ex.getMessage());
+        problem.setTitle("AI Response Parsing Error");
+        problem.setProperty("timestamp", LocalDateTime.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.client.ResourceAccessException.class)
+    public ProblemDetail handleResourceAccessException(org.springframework.web.client.ResourceAccessException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, "The AI service is currently unavailable or timed out. Please try again later.");
+        problem.setTitle("AI Service Timeout/Offline");
+        problem.setProperty("timestamp", LocalDateTime.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.client.RestClientResponseException.class)
+    public ProblemDetail handleRestClientResponseException(org.springframework.web.client.RestClientResponseException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        
+        String detail = "Error communicating with the AI provider.";
+        if (ex.getStatusCode().value() == 429) {
+            detail = "AI request limit exceeded (Rate Limit). Please wait a few moments and try again.";
+        } else if (ex.getStatusCode().value() >= 500) {
+            detail = "The AI provider is experiencing instability. Please try again later.";
+        }
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle("AI Provider Error");
         problem.setProperty("timestamp", LocalDateTime.now());
         return problem;
     }
