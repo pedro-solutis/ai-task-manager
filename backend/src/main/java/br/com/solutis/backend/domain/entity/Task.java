@@ -78,8 +78,14 @@ public class Task {
     }
 
     public void assignParent(Task parentTask) {
-        if (this.id != null && parentTask != null && parentTask.getId().equals(this.id)) {
-            throw new CircularHierarchyException("A task cannot be its own parent.");
+        if (this.id != null && parentTask != null) {
+            Task current = parentTask;
+            while (current != null) {
+                if (this.id.equals(current.getId())) {
+                    throw new CircularHierarchyException("Circular dependency detected: a task cannot be its own ancestor.");
+                }
+                current = current.getParentTask();
+            }
         }
         this.parentTask = parentTask;
     }
