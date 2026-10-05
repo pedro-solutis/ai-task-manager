@@ -66,10 +66,9 @@ public class TaskService {
 
     @Transactional
     public void delete(UUID id) {
-        if(!taskRepository.existsById(id)) {
-            throw new TaskNotFoundException("Task not found with id: " + id);
-        }
-        taskRepository.deleteById(id);
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        taskRepository.delete(task);
     }
     
     @Transactional
