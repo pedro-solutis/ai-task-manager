@@ -93,7 +93,16 @@ public class Task {
                 current = current.getParentTask();
             }
         }
+        
+        if (this.parentTask != null && this.parentTask.getSubTasks() != null) {
+            this.parentTask.getSubTasks().remove(this);
+        }
+        
         this.parentTask = parentTask;
+        
+        if (this.parentTask != null && this.parentTask.getSubTasks() != null) {
+            this.parentTask.getSubTasks().add(this);
+        }
     }
 
     public void updateStatus(TaskStatus newStatus) {

@@ -3,6 +3,7 @@ package br.com.solutis.backend.dto.response;
 import br.com.solutis.backend.domain.enums.TaskPriority;
 import br.com.solutis.backend.domain.enums.TaskStatus;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record TaskResponseDTO(
@@ -14,5 +15,6 @@ public record TaskResponseDTO(
     LocalDateTime dueDate,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    UUID parentTaskId
+    UUID parentTaskId,
+    List<TaskResponseDTO> subTasks
 ) {}

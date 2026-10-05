@@ -117,6 +117,10 @@ public class TaskService {
     }
 
     private TaskResponseDTO mapToResponse(Task task) {
+        List<TaskResponseDTO> subTasksDTO = task.getSubTasks() != null
+                ? task.getSubTasks().stream().map(this::mapToResponse).toList()
+                : List.of();
+
         return new TaskResponseDTO(
                 task.getId(),
                 task.getTitle(),
@@ -126,7 +130,8 @@ public class TaskService {
                 task.getDueDate(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
-                task.getParentTask() != null ? task.getParentTask().getId() : null
+                task.getParentTask() != null ? task.getParentTask().getId() : null,
+                subTasksDTO
         );
     }
 }

@@ -14,10 +14,10 @@ import java.util.UUID;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, UUID> {
 
-    @EntityGraph (attributePaths = {"parentTask"})
+    @EntityGraph (attributePaths = {"parentTask", "subTasks"})
     Page<Task> findAll(Pageable pageable);
 
-    @EntityGraph (attributePaths = {"parentTask"})
+    @EntityGraph (attributePaths = {"parentTask", "subTasks"})
     Optional<Task> findById(UUID id);
 
 }
