@@ -6,9 +6,10 @@ import br.com.solutis.backend.dto.TaskResponseDTO;
 import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
 import br.com.solutis.backend.dto.TaskUpdateDTO;
 import br.com.solutis.backend.service.TaskService;
-import br.com.solutis.backend.dto.TaskEnhancedRequestDTO;
+import br.com.solutis.backend.dto.TaskAiRequestDTO;
 import br.com.solutis.backend.dto.TaskEnhancedResponseDTO;
 import br.com.solutis.backend.service.AiService;
+import br.com.solutis.backend.dto.TaskAnalysisDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -71,7 +72,14 @@ public class TaskController {
     }
 
     @PatchMapping ("/enhance")
-    public ResponseEntity<TaskEnhancedResponseDTO> enhanceTask(@RequestBody @Valid TaskEnhancedRequestDTO dto) {
+    public ResponseEntity<TaskEnhancedResponseDTO> enhanceTask(@RequestBody @Valid TaskAiRequestDTO dto) {
         return ResponseEntity.ok(aiService.enhanceTask(dto));
+    }
+
+    @GetMapping ("{id}/analyze")
+    public ResponseEntity<TaskAnalysisDTO> analyzeTask(@PathVariable("id") UUID taskId) {
+        TaskResponseDTO task = taskService.findById(taskId);
+        TaskAiRequestDTO taskAiRequestDTO = new TaskAiRequestDTO(task.title(), task.description());
+        return ResponseEntity.ok(aiService.analyzeTask(taskAiRequestDTO));
     }
 }
