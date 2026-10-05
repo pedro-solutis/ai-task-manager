@@ -76,7 +76,8 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public void updateDetails(String description, TaskPriority priority, LocalDateTime dueDate) {
+    public void updateDetails(String title, String description, TaskPriority priority, LocalDateTime dueDate) {
+        if(title != null && !title.isBlank()) this.title = title;
         if(description != null) this.description = description;
         if(priority != null) this.priority = priority;
         if(dueDate != null) this.dueDate = dueDate;
@@ -108,8 +109,8 @@ public class Task {
             throw new InvalidTaskTransitionException("A TODO task can only be advanced to IN_PROGRESS.");
         }
 
-        if (this.status == TaskStatus.IN_PROGRESS && newStatus != TaskStatus.DONE) {
-            throw new InvalidTaskTransitionException("A IN_PROGRESS task can only be completed to DONE.");
+        if (this.status == TaskStatus.IN_PROGRESS && newStatus != TaskStatus.DONE && newStatus != TaskStatus.TODO) {
+            throw new InvalidTaskTransitionException("An IN_PROGRESS task can only be changed to DONE or TODO.");
         }
 
         this.status = newStatus;

@@ -58,7 +58,7 @@ public class TaskService {
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
         
         TaskPriority priority = dto.priority() != null ? TaskPriority.valueOf(dto.priority().toUpperCase()) : null;
-        task.updateDetails(dto.description(), priority, dto.dueDate());
+        task.updateDetails(dto.title(), dto.description(), priority, dto.dueDate());
 
         task = taskRepository.save(task);
         return mapToResponse(task);
