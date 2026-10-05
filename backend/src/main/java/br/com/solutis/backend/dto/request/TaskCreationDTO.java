@@ -1,4 +1,4 @@
-package br.com.solutis.backend.dto;
+package br.com.solutis.backend.dto.request;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
