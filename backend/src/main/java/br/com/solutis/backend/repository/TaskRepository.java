@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -15,5 +16,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     @EntityGraph (attributePaths = {"parentTask"})
     Page<Task> findAll(Pageable pageable);
+
+    @EntityGraph (attributePaths = {"parentTask"})
+    Optional<Task> findById(UUID id);
 
 }
