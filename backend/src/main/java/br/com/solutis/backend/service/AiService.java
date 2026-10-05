@@ -1,5 +1,7 @@
 package br.com.solutis.backend.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import br.com.solutis.backend.dto.TaskAnalysisDTO;
 import br.com.solutis.backend.dto.TaskAiRequestDTO;
 import br.com.solutis.backend.dto.TaskEnhancedResponseDTO;
 import br.com.solutis.backend.exception.AiResponseParsingException;
+import br.com.solutis.backend.dto.TaskDecompositionResponseDTO;
 
 @Service 
 @RequiredArgsConstructor 
@@ -57,6 +60,44 @@ public class AiService {
         String result = aiModelAdapter.generateText(prompt);
         TaskAnalysisDTO response = formatEnhancedResponse(result, TaskAnalysisDTO.class);
         return response;
+    }
+
+    public TaskDecompositionResponseDTO decomposeTask(TaskAiRequestDTO taskRequestDTO) {
+        String prompt = """
+        Decompose the provided task into actionable subtasks with incremental milestone deadlines.
+
+        Rules:
+        1. Break down the input task into sequential, concrete subtasks ordered by execution dependency.
+        2. Language: Generate the `title` and `description` of all subtasks in the exact same language used in the input title and description.
+        3. Return a valid JSON object strictly adhering to the schema with the property `subTasks`.
+        4. For each subtask, populate:
+           - `title`: Short and imperative title.
+           - `description`: Clear specification of the deliverable.
+           - `priority`: One of the enum values: "LOW", "MEDIUM" or "HIGH".
+           - `dueDate`: ISO-8601 formatted date-time string ("YYYY-MM-DDTHH:mm:ss").
+        5. Scheduling & Date constraints:
+           - Distribute subtask due dates progressively across the timeline between Current Timestamp and Parent Due Date.
+           - Estimate the effort/complexity required for each step and assign intermediate checkpoints accordingly.
+           - Earlier subtasks MUST have earlier deadlines (strictly ascending order: dueDate_1 < dueDate_2 < ... <= parent dueDate).
+           - DO NOT set every subtask's dueDate to the parent task's final dueDate. Only the very last subtask may match the parent Due Date.
+           - All due dates must fall strictly after Current Timestamp and on or before Parent Due Date.
+        6. Output pure JSON only. Do not include markdown formatting, backticks, or conversational text. 
+
+        Input:
+        - Current Timestamp: %s
+        - Title: %s
+        - Description: %s
+        - Due Date: %s
+        """.formatted(
+                LocalDateTime.now(),
+                taskRequestDTO.title(),
+                taskRequestDTO.description(),
+                taskRequestDTO.dueDate()
+        );
+        
+        String result = aiModelAdapter.generateText(prompt);
+        TaskDecompositionResponseDTO taskDecomposed = formatEnhancedResponse(result, TaskDecompositionResponseDTO.class);
+        return taskDecomposed;
     }
 
     private <T> T formatEnhancedResponse(String result, Class<T> targetClass) {

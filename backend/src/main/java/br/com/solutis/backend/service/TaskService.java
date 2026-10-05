@@ -10,6 +10,7 @@ import br.com.solutis.backend.dto.TaskStatusUpdateDTO;
 import br.com.solutis.backend.dto.TaskUpdateDTO;
 import br.com.solutis.backend.exception.TaskNotFoundException;
 import br.com.solutis.backend.repository.TaskRepository;
+import br.com.solutis.backend.dto.TaskDecompositionResponseDTO;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -99,6 +101,21 @@ public class TaskService {
 
         task = taskRepository.save(task);
         return mapToResponse(task);
+    }
+
+    @Transactional
+    public List<TaskResponseDTO> saveDecomposedTasks(UUID parentTaskId, TaskDecompositionResponseDTO decomposition) {
+        Task parentTask = taskRepository.findById(parentTaskId)
+                .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + parentTaskId));
+
+        List<Task> subTasksToSave = decomposition.subTasks().stream().map(dto -> {
+            TaskPriority priority = dto.priority() != null ? dto.priority() : TaskPriority.MEDIUM;
+            Task subTask = new Task(dto.title(), dto.description(), priority, parentTask.getDueDate());
+            subTask.assignParent(parentTask);
+            return subTask;
+        }).toList();
+
+        return taskRepository.saveAll(subTasksToSave).stream().map(this::mapToResponse).toList();
     }
 
     private TaskResponseDTO mapToResponse(Task task) {

@@ -10,6 +10,7 @@ import br.com.solutis.backend.dto.TaskAiRequestDTO;
 import br.com.solutis.backend.dto.TaskEnhancedResponseDTO;
 import br.com.solutis.backend.service.AiService;
 import br.com.solutis.backend.dto.TaskAnalysisDTO;
+import br.com.solutis.backend.dto.TaskDecompositionResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -76,10 +78,19 @@ public class TaskController {
         return ResponseEntity.ok(aiService.enhanceTask(dto));
     }
 
-    @GetMapping ("{id}/analyze")
+    @GetMapping ("/{id}/analyze")
     public ResponseEntity<TaskAnalysisDTO> analyzeTask(@PathVariable("id") UUID taskId) {
         TaskResponseDTO task = taskService.findById(taskId);
-        TaskAiRequestDTO taskAiRequestDTO = new TaskAiRequestDTO(task.title(), task.description());
+        TaskAiRequestDTO taskAiRequestDTO = new TaskAiRequestDTO(task.title(), task.description(), null);
         return ResponseEntity.ok(aiService.analyzeTask(taskAiRequestDTO));
+    }
+
+    @PostMapping("/{id}/decompose")
+    public ResponseEntity<List<TaskResponseDTO>> decomposeTask(@PathVariable("id") UUID taskId) {
+        TaskResponseDTO parent = taskService.findById(taskId);
+        TaskAiRequestDTO requestDTO = new TaskAiRequestDTO(parent.title(), parent.description(), parent.dueDate());
+        TaskDecompositionResponseDTO decomposition = aiService.decomposeTask(requestDTO);
+        List<TaskResponseDTO> createdSubTasks = taskService.saveDecomposedTasks(taskId, decomposition);
+        return ResponseEntity.ok(createdSubTasks);
     }
 }
