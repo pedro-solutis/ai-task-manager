@@ -4,6 +4,7 @@ import br.com.solutis.backend.service.*;
 import br.com.solutis.backend.dto.response.*;
 import br.com.solutis.backend.dto.request.*;
 import br.com.solutis.backend.domain.enums.*;
+import br.com.solutis.backend.ai.TaskAiService;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class TaskAiFacade {
 
     private final TaskService taskService;
-    private final AiService aiService;    
+    private final TaskAiService taskAiService;    
 
     @Transactional(readOnly = true)
     public TaskEnhancedResponseDTO enhanceById(UUID taskId){
@@ -29,12 +30,12 @@ public class TaskAiFacade {
             task.title(),
             task.description()
         );
-        return aiService.enhanceTask(request);
+        return taskAiService.enhanceTask(request);
         
     }
 
     @Transactional (readOnly = true)
-    public TaskAnalysisDTO analyzeById(UUID taskId){
+    public TaskAnalysisResponseDTO analyzeById(UUID taskId){
         TaskResponseDTO task = taskService.findById(taskId);
         TaskAnalysisRequestDTO request = new TaskAnalysisRequestDTO(
             task.title(),
@@ -42,7 +43,7 @@ public class TaskAiFacade {
             task.priority().toString(),
             task.dueDate()
         );
-        return aiService.analyzeTask(request);
+        return taskAiService.analyzeTask(request);
     }
 
     @Transactional 
@@ -55,20 +56,20 @@ public class TaskAiFacade {
             parent.description(),
             parent.dueDate()
         );
-        TaskDecompositionResponseDTO decomposition = aiService.decomposeTask(request);
+        TaskDecomposeResponseDTO decomposition = taskAiService.decomposeTask(request);
         return taskService.saveDecomposedTasks(taskId, decomposition);
     }
 
     public TaskEnhancedResponseDTO enhancePreview(TaskEnhanceRequestDTO request){
-        return aiService.enhanceTask(request);
+        return taskAiService.enhanceTask(request);
     }
 
-    public TaskAnalysisDTO analyzePreview(TaskAnalysisRequestDTO request){
-        return aiService.analyzeTask(request);
+    public TaskAnalysisResponseDTO analyzePreview(TaskAnalysisRequestDTO request){
+        return taskAiService.analyzeTask(request);
     }
 
-    public TaskDecompositionResponseDTO decomposePreview(TaskDecomposeRequestDTO request){
-        return aiService.decomposeTask(request);
+    public TaskDecomposeResponseDTO decomposePreview(TaskDecomposeRequestDTO request){
+        return taskAiService.decomposeTask(request);
     }
 
 }

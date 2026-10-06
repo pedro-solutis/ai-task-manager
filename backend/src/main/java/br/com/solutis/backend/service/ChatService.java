@@ -2,7 +2,7 @@ package br.com.solutis.backend.service;
 
 import br.com.solutis.backend.dto.response.*;
 import br.com.solutis.backend.dto.request.*;
-import br.com.solutis.backend.adapter.ai.AiModelAdapter;
+import br.com.solutis.backend.ai.TaskAiService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor  
 public class ChatService {
 
-    private final AiModelAdapter aiModelAdapter;
+    private final TaskAiService taskAiService;
 
     public ChatResponseDTO chat(ChatRequestDTO requestDTO) {
-        return aiModelAdapter.chat(requestDTO.chatId(), requestDTO.prompt());
+        return taskAiService.chat(requestDTO);
     }
 
 }

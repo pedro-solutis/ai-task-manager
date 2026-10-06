@@ -28,7 +28,7 @@ public class TaskAiController {
     }
 
     @PostMapping ("/{id}/analyze")
-    public ResponseEntity<TaskAnalysisDTO> analyzeById(@PathVariable("id") UUID taskId) {
+    public ResponseEntity<TaskAnalysisResponseDTO> analyzeById(@PathVariable("id") UUID taskId) {
         return ResponseEntity.ok(taskAiFacade.analyzeById(taskId));
     }
 
@@ -43,12 +43,12 @@ public class TaskAiController {
     }
 
     @PostMapping ("/analyze")
-    public ResponseEntity<TaskAnalysisDTO> analyzePreview(@RequestBody @Valid TaskAnalysisRequestDTO dto) {
+    public ResponseEntity<TaskAnalysisResponseDTO> analyzePreview(@RequestBody @Valid TaskAnalysisRequestDTO dto) {
         return ResponseEntity.ok(taskAiFacade.analyzePreview(dto));
     }
 
     @PostMapping ("/decompose")
-    public ResponseEntity<TaskDecompositionResponseDTO> decomposePreview(@RequestBody @Valid TaskDecomposeRequestDTO dto) {
+    public ResponseEntity<TaskDecomposeResponseDTO> decomposePreview(@RequestBody @Valid TaskDecomposeRequestDTO dto) {
         return ResponseEntity.ok(taskAiFacade.decomposePreview(dto));
     }
 

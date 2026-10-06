@@ -101,7 +101,7 @@ public class TaskService {
     }
 
     @Transactional
-    public List<TaskResponseDTO> saveDecomposedTasks(UUID parentTaskId, TaskDecompositionResponseDTO decomposition) {
+    public List<TaskResponseDTO> saveDecomposedTasks(UUID parentTaskId, TaskDecomposeResponseDTO decomposition) {
         Task parentTask = taskRepository.findById(parentTaskId)
                 .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + parentTaskId));
 
