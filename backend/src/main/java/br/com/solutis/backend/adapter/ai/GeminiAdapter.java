@@ -1,6 +1,6 @@
 package br.com.solutis.backend.adapter.ai;
 
-import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -11,10 +11,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeminiAdapter implements AiModelAdapter {
 
-    private final GoogleGenAiChatModel chatModel;
+    private final ChatClient chatClient;
 
     @Override
     public String generateText(String prompt) {
-        return chatModel.call(prompt);
+        return chatClient.prompt()
+            .user(prompt)
+            .call()
+            .content();
+    }
+
+    @Override
+    public String chat(String chatId, String prompt) {
+        return chatClient.prompt()
+                .user(prompt)
+                .advisors(a -> a.param("chat_memory_conversation_id", chatId))
+                .call()
+                .content();
     }
 }
