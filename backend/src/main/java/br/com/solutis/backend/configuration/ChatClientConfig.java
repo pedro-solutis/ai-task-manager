@@ -1,7 +1,6 @@
 package br.com.solutis.backend.configuration;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
@@ -43,7 +42,6 @@ public class ChatClientConfig {
         ChatClient.Builder chatBuilder = ChatClient.builder(chatModel);
         return chatBuilder
             .defaultSystem(systemHarness + "\n" + guardrails)
-            .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
             .build(); 
 	}
 }

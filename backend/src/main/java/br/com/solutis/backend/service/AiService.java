@@ -1,12 +1,14 @@
 package br.com.solutis.backend.service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import tools.jackson.databind.ObjectMapper;
 import br.com.solutis.backend.adapter.ai.AiModelAdapter;
 import br.com.solutis.backend.dto.request.*;
 import br.com.solutis.backend.dto.response.*;
@@ -17,7 +19,6 @@ import br.com.solutis.backend.exception.AiResponseParsingException;
 public class AiService {
 
     private final AiModelAdapter aiModelAdapter;
-    private final ObjectMapper objectMapper;
 
     @Value("${ai.prompts.enhance}")
     private String enhancePromptTemplate;
@@ -29,55 +30,64 @@ public class AiService {
     private String decomposePromptTemplate;
 
     public TaskEnhancedResponseDTO enhanceTask(TaskEnhanceRequestDTO taskRequestDTO) {
-        String prompt = enhancePromptTemplate.formatted(
-                taskRequestDTO.title(),
-                taskRequestDTO.description()
-        );
+        var converter = new BeanOutputConverter<>(TaskEnhancedResponseDTO.class);
+        var template = new PromptTemplate(enhancePromptTemplate);
+        
+        String prompt = template.render(Map.of(
+                "title", taskRequestDTO.title() != null ? taskRequestDTO.title() : "",
+                "description", taskRequestDTO.description() != null ? taskRequestDTO.description() : "",
+                "formatInstructions", converter.getFormat()
+        ));
+        
         String result = aiModelAdapter.generateText(prompt);
-        TaskEnhancedResponseDTO response = formatResponse(result, TaskEnhancedResponseDTO.class);
-        return response;
+        
+        try {
+            return converter.convert(result);
+        } catch (Exception e) {
+            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage());
+        }
     }
 
     public TaskAnalysisDTO analyzeTask(TaskAnalysisRequestDTO taskRequestDTO) {
-        String prompt = analyzePromptTemplate.formatted(
-                LocalDateTime.now(),
-                taskRequestDTO.dueDate(),
-                taskRequestDTO.priority(),
-                taskRequestDTO.title(),
-                taskRequestDTO.description()
-        );
+        var converter = new BeanOutputConverter<>(TaskAnalysisDTO.class);
+        var template = new PromptTemplate(analyzePromptTemplate);
+        
+        String prompt = template.render(Map.of(
+                "currentTimestamp", LocalDateTime.now().toString(),
+                "dueDate", taskRequestDTO.dueDate() != null ? taskRequestDTO.dueDate().toString() : "Not defined",
+                "currentPriority", taskRequestDTO.priority() != null ? taskRequestDTO.priority().toString() : "Not defined",
+                "title", taskRequestDTO.title() != null ? taskRequestDTO.title() : "",
+                "description", taskRequestDTO.description() != null ? taskRequestDTO.description() : "",
+                "formatInstructions", converter.getFormat()
+        ));
 
         String result = aiModelAdapter.generateText(prompt);
-        TaskAnalysisDTO response = formatResponse(result, TaskAnalysisDTO.class);
-        return response;
+        
+        try {
+            return converter.convert(result);
+        } catch (Exception e) {
+            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage());
+        }
     }
 
     public TaskDecompositionResponseDTO decomposeTask(TaskDecomposeRequestDTO taskRequestDTO) {
-        String prompt = decomposePromptTemplate.formatted(
-                LocalDateTime.now(),
-                taskRequestDTO.dueDate(),
-                taskRequestDTO.title(),
-                taskRequestDTO.description()
-        );
+        var converter = new BeanOutputConverter<>(TaskDecompositionResponseDTO.class);
+        var template = new PromptTemplate(decomposePromptTemplate);
+        
+        String prompt = template.render(Map.of(
+                "currentTimestamp", LocalDateTime.now().toString(),
+                "dueDate", taskRequestDTO.dueDate() != null ? taskRequestDTO.dueDate().toString() : "Not defined",
+                "title", taskRequestDTO.title() != null ? taskRequestDTO.title() : "",
+                "description", taskRequestDTO.description() != null ? taskRequestDTO.description() : "",
+                "formatInstructions", converter.getFormat()
+        ));
         
         String result = aiModelAdapter.generateText(prompt);
-        TaskDecompositionResponseDTO taskDecomposed = formatResponse(result, TaskDecompositionResponseDTO.class);
-        return taskDecomposed;
-    }
-
-    private <T> T formatResponse(String result, Class<T> targetClass) {
-        String cleanedResult = result.trim();
-        int startIndex = cleanedResult.indexOf('{');
-        int endIndex = cleanedResult.lastIndexOf('}');
         
-        if (startIndex != -1 && endIndex != -1 && startIndex <= endIndex) {
-            cleanedResult = cleanedResult.substring(startIndex, endIndex + 1);
-        }
-                                             
         try {
-            return objectMapper.readValue(cleanedResult, targetClass);
+            return converter.convert(result);
         } catch (Exception e) {
-            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage() + ".\n Response received: " + cleanedResult);
+            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage());
         }
     }
 }
