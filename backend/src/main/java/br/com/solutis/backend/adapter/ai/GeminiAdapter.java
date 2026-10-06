@@ -1,6 +1,7 @@
 package br.com.solutis.backend.adapter.ai;
 
 import br.com.solutis.backend.tools.TaskTools;
+import br.com.solutis.backend.dto.response.*;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.annotation.Primary;
@@ -25,12 +26,12 @@ public class GeminiAdapter implements AiModelAdapter {
     }
 
     @Override
-    public String chat(String chatId, String prompt) {
+    public ChatResponseDTO chat(String chatId, String prompt) {
         return chatClient.prompt()
                 .user(prompt)
                 .tools(taskTools)
                 .advisors(a -> a.param("chat_memory_conversation_id", chatId))
                 .call()
-                .content();
+                .entity(ChatResponseDTO.class);
     }
 }
