@@ -3,7 +3,6 @@ package br.com.solutis.backend.controller;
 import br.com.solutis.backend.service.TaskService;
 import br.com.solutis.backend.dto.request.*;
 import br.com.solutis.backend.dto.response.*;
-import br.com.solutis.backend.facade.ai.TaskAiFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,8 +23,6 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
-
-    private final TaskAiFacade taskAiFacade;
 
     @GetMapping
     public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.DESC) Pageable pageable) {
@@ -64,35 +60,5 @@ public class TaskController {
     public ResponseEntity<Void> delete(@PathVariable("id") UUID taskId) {
         taskService.delete(taskId);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping ("/{id}/enhance")
-    public ResponseEntity<TaskEnhancedResponseDTO> enhanceById(@PathVariable("id") UUID taskId) {
-        return ResponseEntity.ok(taskAiFacade.enhanceById(taskId));
-    }
-
-    @PostMapping ("/{id}/analyze")
-    public ResponseEntity<TaskAnalysisDTO> analyzeById(@PathVariable("id") UUID taskId) {
-        return ResponseEntity.ok(taskAiFacade.analyzeById(taskId));
-    }
-
-    @PostMapping ("/{id}/decompose")
-    public ResponseEntity<List<TaskResponseDTO>> decomposeById(@PathVariable("id") UUID taskId) {
-        return ResponseEntity.ok(taskAiFacade.decomposeById(taskId));
-    }
-
-    @PostMapping ("/enhance")
-    public ResponseEntity<TaskEnhancedResponseDTO> enhancePreview(@RequestBody @Valid TaskEnhanceRequestDTO dto) {
-        return ResponseEntity.ok(taskAiFacade.enhancePreview(dto));
-    }
-
-    @PostMapping ("/analyze")
-    public ResponseEntity<TaskAnalysisDTO> analyzePreview(@RequestBody @Valid TaskAnalysisRequestDTO dto) {
-        return ResponseEntity.ok(taskAiFacade.analyzePreview(dto));
-    }
-
-    @PostMapping ("/decompose")
-    public ResponseEntity<TaskDecompositionResponseDTO> decomposePreview(@RequestBody @Valid TaskDecomposeRequestDTO dto) {
-        return ResponseEntity.ok(taskAiFacade.decomposePreview(dto));
     }
 }
