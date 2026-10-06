@@ -37,7 +37,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
             SELECT t FROM Task t
             WHERE (:status IS NULL OR t.status = :status)
             AND (:priority IS NULL OR t.priority = :priority)
-            AND (:due_date IS NULL OR t.due_date< = :due_date)
+            AND (cast(:due_date as timestamp) IS NULL OR t.dueDate <= :due_date)
         """
     )
     List<Task> filterTask(
