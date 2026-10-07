@@ -125,6 +125,12 @@ public class Task {
         this.status = newStatus;
     }
 
+    public void updateCascadeStatus(TaskStatus newStatus){
+        if(newStatus != null){
+            this.status = newStatus;
+        }
+    }
+
     public void updateDueDate(LocalDateTime dueDate) {
         if (dueDate != null) {
             this.dueDate = dueDate;

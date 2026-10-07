@@ -147,7 +147,12 @@ public class TaskService {
         boolean changed = false;
 
         if (task.getStatus() == TaskStatus.IN_PROGRESS && parent.getStatus() == TaskStatus.TODO) {
-            parent.updateStatus(TaskStatus.IN_PROGRESS);
+            parent.updateCascadeStatus(TaskStatus.IN_PROGRESS);
+            changed = true;
+        }
+
+        if (task.getStatus() != TaskStatus.DONE && parent.getStatus() == TaskStatus.DONE) {
+            parent.updateCascadeStatus(TaskStatus.IN_PROGRESS);
             changed = true;
         }
 
@@ -161,7 +166,7 @@ public class TaskService {
                 boolean allChildrenDone = parent.getSubTasks().stream()
                         .allMatch(child -> child.getStatus() == TaskStatus.DONE);
                 if (allChildrenDone) {
-                    parent.updateStatus(TaskStatus.DONE);
+                    parent.updateCascadeStatus(TaskStatus.DONE);
                     changed = true;
                 }
             }
@@ -179,12 +184,12 @@ public class TaskService {
             boolean changed = false;
 
             if (task.getStatus() == TaskStatus.DONE && child.getStatus() != TaskStatus.DONE) {
-                child.updateStatus(TaskStatus.DONE);
+                child.updateCascadeStatus(TaskStatus.DONE);
                 changed = true;
             }
 
             if (task.getStatus() == TaskStatus.TODO && child.getStatus() == TaskStatus.IN_PROGRESS) {
-                child.updateStatus(TaskStatus.TODO);
+                child.updateCascadeStatus(TaskStatus.TODO);
                 changed = true;
             }
 
@@ -206,7 +211,7 @@ public class TaskService {
             boolean allChildrenDone = parent.getSubTasks().stream()
                     .allMatch(child -> child.getStatus() == TaskStatus.DONE);
             if (allChildrenDone) {
-                parent.updateStatus(TaskStatus.DONE);
+                parent.updateCascadeStatus(TaskStatus.DONE);
                 cascadeBottomUp(parent);
             }
         }
