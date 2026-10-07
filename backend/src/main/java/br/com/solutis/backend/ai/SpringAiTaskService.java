@@ -118,7 +118,11 @@ public class SpringAiTaskService implements TaskAiService{
         String chatId = request.chatId() != null && !request.chatId().isEmpty() ? request.chatId() : java.util.UUID.randomUUID().toString();
         
         String response = chatClientBuilder.build().prompt()
-            .system(commonGuardrails)
+            .system(
+                s -> s.text(assistantPrompt)
+                .param("currentTimestamp", LocalDateTime.now())
+                .param("guardrails", commonGuardrails)
+            )
             .user(
                 request.prompt()
             )
