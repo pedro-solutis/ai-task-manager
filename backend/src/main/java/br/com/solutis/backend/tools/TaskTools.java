@@ -20,31 +20,35 @@ public class TaskTools {
 
     private final TaskRepository taskRepository;
 
-    @Tool (description = "Search for pending tasks finding by status not equal DONE")
-    public List<TaskResponseDTO> findPendingTasks(){
-        return taskRepository.findPendingTask()
-            .stream()
-            .map(this::mapToResponse)
-            .toList();
-    }
+    @Tool(description = "Search and filter tasks. All parameters are optional. " +
+            "- taskId: use to find a specific task by its ID. " +
+            "- status: filter by task status (TODO, IN_PROGRESS, DONE). " +
+            "- priority: filter by task priority (LOW, MEDIUM, HIGH). " +
+            "- maxDueDate: maximum due date in ISO-8601 format (YYYY-MM-DDTHH:mm:ss). " +
+            "- pendingOnly: if 'true', returns only tasks that do NOT have the DONE status.")
+    public List<TaskResponseDTO> searchTasks(
+            String taskId,
+            String status,
+            String priority,
+            String maxDueDate,
+            Boolean pendingOnly) {
 
-    @Tool (description = "Search for task filtering by status, priority and due date. The dueDate must be in ISO-8601 format (YYYY-MM-DDTHH:mm:ss)")
-    public List<TaskResponseDTO> filterTask(String status, String priority, String dueDate){
+        if (taskId != null && !taskId.isBlank()) {
+            return taskRepository.findById(UUID.fromString(taskId))
+                    .map(this::mapToResponse)
+                    .map(List::of)
+                    .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
+        }
+
         TaskStatus taskStatus = status != null && !status.isBlank() ? TaskStatus.valueOf(status.toUpperCase()) : null;
         TaskPriority taskPriority = priority != null && !priority.isBlank() ? TaskPriority.valueOf(priority.toUpperCase()) : null;
-        LocalDateTime date = dueDate != null && !dueDate.isBlank() ? LocalDateTime.parse(dueDate) : null;
-        
-        return taskRepository.filterTask(taskStatus, taskPriority, date)
-            .stream()
-            .map(this::mapToResponse)
-            .toList();
-    }
+        LocalDateTime date = maxDueDate != null && !maxDueDate.isBlank() ? LocalDateTime.parse(maxDueDate) : null;
+        boolean excludeDone = Boolean.TRUE.equals(pendingOnly);
 
-    @Tool (description = "Search for task by id")
-    public TaskResponseDTO findById(UUID taskId){
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
-        return mapToResponse(task);
+        return taskRepository.searchTasks(taskStatus, taskPriority, date, excludeDone)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private TaskResponseDTO mapToResponse(Task task) {

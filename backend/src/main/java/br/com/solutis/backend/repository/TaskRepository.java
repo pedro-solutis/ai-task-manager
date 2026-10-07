@@ -24,25 +24,19 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     @EntityGraph (attributePaths = {"parentTask", "subTasks"})
     Optional<Task> findById(UUID id);
 
-    @Query (
-        """
-            SELECT t FROM Task t
-            WHERE t.status != 'DONE'        
-        """
-    )
-    List<Task> findPendingTask();
-
     @Query(
         """
             SELECT t FROM Task t
             WHERE (:status IS NULL OR t.status = :status)
             AND (:priority IS NULL OR t.priority = :priority)
             AND (cast(:due_date as timestamp) IS NULL OR t.dueDate <= :due_date)
+            AND (:excludeDone = false OR t.status != 'DONE')
         """
     )
-    List<Task> filterTask(
+    List<Task> searchTasks(
         @Param("status") TaskStatus status,
         @Param("priority") TaskPriority priority,
-        @Param("due_date") LocalDateTime dueDate
+        @Param("due_date") LocalDateTime dueDate,
+        @Param("excludeDone") boolean excludeDone
     );
 }
