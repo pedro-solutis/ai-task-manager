@@ -1,5 +1,6 @@
 package br.com.solutis.backend.exception;
 
+import org.springframework.core.convert.ConversionException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -7,6 +8,10 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,24 +74,24 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(AiResponseParsingException.class)
-    public ProblemDetail handleAiResponseParsingException(AiResponseParsingException ex) {
+    @ExceptionHandler(AiResponseValidationException.class)
+    public ProblemDetail handleAiResponseParsingException(AiResponseValidationException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to parse AI response: " + ex.getMessage());
         problem.setTitle("AI Response Parsing Error");
         problem.setProperty("timestamp", LocalDateTime.now());
         return problem;
     }
 
-    @ExceptionHandler(org.springframework.web.client.ResourceAccessException.class)
-    public ProblemDetail handleResourceAccessException(org.springframework.web.client.ResourceAccessException ex) {
+    @ExceptionHandler(ResourceAccessException.class)
+    public ProblemDetail handleResourceAccessException(ResourceAccessException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, "The AI service is currently unavailable or timed out. Please try again later.");
         problem.setTitle("AI Service Timeout/Offline");
         problem.setProperty("timestamp", LocalDateTime.now());
         return problem;
     }
 
-    @ExceptionHandler(org.springframework.web.client.RestClientResponseException.class)
-    public ProblemDetail handleRestClientResponseException(org.springframework.web.client.RestClientResponseException ex) {
+    @ExceptionHandler(RestClientResponseException.class)
+    public ProblemDetail handleRestClientResponseException(RestClientResponseException ex) {
         HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
         if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
         
@@ -99,6 +104,17 @@ public class GlobalExceptionHandler {
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle("AI Provider Error");
+        problem.setProperty("timestamp", LocalDateTime.now());
+        return problem;
+    }
+
+    @ExceptionHandler({
+        JsonProcessingException.class,
+        ConversionException.class
+    })
+    public ProblemDetail handleJsonAndConversionExceptions(Exception ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "A IA retornou um formato de dados inválido e não pôde ser processado.");
+        problem.setTitle("AI Parse Error");
         problem.setProperty("timestamp", LocalDateTime.now());
         return problem;
     }

@@ -18,7 +18,7 @@ import br.com.solutis.backend.dto.response.TaskAnalysisResponseDTO;
 import br.com.solutis.backend.dto.response.TaskDecomposeResponseDTO;
 import br.com.solutis.backend.dto.response.TaskEnhancedResponseDTO;
 import br.com.solutis.backend.tools.TaskTools;
-import br.com.solutis.backend.exception.AiResponseParsingException;
+import br.com.solutis.backend.exception.AiResponseValidationException;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 
@@ -44,73 +44,55 @@ public class SpringAiTaskService implements TaskAiService{
 
     @Override
     public TaskEnhancedResponseDTO enhanceTask(TaskEnhanceRequestDTO request) {
-        try {
-            TaskEnhancedResponseDTO response = chatClientBuilder.build().prompt()
-                .system(commonGuardrails)
-                .user(
-                    u -> u.text(enhancePrompt)
-                    .param("title", request.title())
-                    .param("description", request.description())
-                )
-                .call()
-                .entity(TaskEnhancedResponseDTO.class);
-                
-            validateResponse(response);
-            return response;
-        } catch (AiResponseParsingException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage());
-        }
+        TaskEnhancedResponseDTO response = chatClientBuilder.build().prompt()
+            .system(commonGuardrails)
+            .user(
+                u -> u.text(enhancePrompt)
+                .param("title", request.title())
+                .param("description", request.description())
+            )
+            .call()
+            .entity(TaskEnhancedResponseDTO.class);
+            
+        validateResponse(response);
+        return response;
     }
 
     @Override
     public TaskAnalysisResponseDTO analyzeTask(TaskAnalysisRequestDTO request) {
-        try {
-            TaskAnalysisResponseDTO response = chatClientBuilder.build().prompt()
-                .system(commonGuardrails)
-                .user(
-                    u -> u.text(analyzePrompt)
-                    .param("currentTimestamp",LocalDateTime.now())
-                    .param("dueDate", request.dueDate())
-                    .param("currentPriority", request.priority())
-                    .param("title", request.title())
-                    .param("description", request.description())
-                )
-                .call()
-                .entity(TaskAnalysisResponseDTO.class);
-                
-            validateResponse(response);
-            return response;
-        } catch (AiResponseParsingException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage());
-        }
+        TaskAnalysisResponseDTO response = chatClientBuilder.build().prompt()
+            .system(commonGuardrails)
+            .user(
+                u -> u.text(analyzePrompt)
+                .param("currentTimestamp",LocalDateTime.now())
+                .param("dueDate", request.dueDate())
+                .param("currentPriority", request.priority())
+                .param("title", request.title())
+                .param("description", request.description())
+            )
+            .call()
+            .entity(TaskAnalysisResponseDTO.class);
+            
+        validateResponse(response);
+        return response;
     }
 
     @Override
     public TaskDecomposeResponseDTO decomposeTask(TaskDecomposeRequestDTO request) {
-        try {
-            TaskDecomposeResponseDTO response = chatClientBuilder.build().prompt()
-                .system(commonGuardrails)
-                .user(
-                    u -> u.text(decomposePrompt)
-                    .param("title", request.title())
-                    .param("description", request.description())
-                    .param("dueDate", request.dueDate())
-                    .param("currentTimestamp", LocalDateTime.now())
-                )
-                .call()
-                .entity(TaskDecomposeResponseDTO.class);
-                
-            validateResponse(response);
-            return response;
-        } catch (AiResponseParsingException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            throw new AiResponseParsingException("Failed to parse AI response: " + e.getMessage());
-        }
+        TaskDecomposeResponseDTO response = chatClientBuilder.build().prompt()
+            .system(commonGuardrails)
+            .user(
+                u -> u.text(decomposePrompt)
+                .param("title", request.title())
+                .param("description", request.description())
+                .param("dueDate", request.dueDate())
+                .param("currentTimestamp", LocalDateTime.now())
+            )
+            .call()
+            .entity(TaskDecomposeResponseDTO.class);
+            
+        validateResponse(response);
+        return response;
     }
 
     @Override
@@ -141,14 +123,14 @@ public class SpringAiTaskService implements TaskAiService{
     
     private <T> void validateResponse(T response) {
         if (response == null) {
-            throw new AiResponseParsingException("AI returned a null response");
+            throw new AiResponseValidationException("AI returned a null response");
         }
         var violations = validator.validate(response);
         if (!violations.isEmpty()) {
             String messages = violations.stream()
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                 .collect(java.util.stream.Collectors.joining(", "));
-            throw new AiResponseParsingException("AI returned invalid data: " + messages);
+            throw new AiResponseValidationException("AI returned invalid data: " + messages);
         }
     }
 

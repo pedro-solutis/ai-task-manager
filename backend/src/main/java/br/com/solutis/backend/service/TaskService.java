@@ -112,7 +112,7 @@ public class TaskService {
             task.assignParent(null);
         }
 
-        if (oldParent != null && (dto.parentTaskId() == null || !oldParent.getId().equals(dto.parentTaskId()))) {
+        if (oldParent != null && (dto.parentTaskId() == null || !oldParent.getId().equals(UUID.fromString(dto.parentTaskId())))) {
             evaluateParentStatus(oldParent);
         }
 
