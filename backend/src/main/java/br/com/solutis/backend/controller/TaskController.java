@@ -32,7 +32,7 @@ public class TaskController {
     @Operation(summary = "Find all tasks")
     @ApiResponse(responseCode = "200", description = "Successful operation")
     @GetMapping
-    public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.DESC) Pageable pageable) {
+    public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.ASC) Pageable pageable) {
         return ResponseEntity.ok(taskService.findAll(pageable));
     }
 
