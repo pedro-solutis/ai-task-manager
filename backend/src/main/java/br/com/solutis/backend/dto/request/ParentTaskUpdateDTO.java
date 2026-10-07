@@ -1,12 +1,10 @@
 package br.com.solutis.backend.dto.request;
 
-import java.util.UUID;
-
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record ParentTaskUpdateDTO(
-    @NotNull (message = "Parent task id is required")
-    UUID parentTaskId
+    @Size (min = 36, max = 36, message = "Parent task id must have 36 characters")
+    String parentTaskId
 ) {
 
 }

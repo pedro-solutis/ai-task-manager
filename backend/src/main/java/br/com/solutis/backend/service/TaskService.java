@@ -46,6 +46,7 @@ public class TaskService {
             Task parent = taskRepository.findById(dto.parentTaskId())
                     .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + dto.parentTaskId()));
             task.assignParent(parent);
+            cascadeBottomUp(task);
         }
 
         task = taskRepository.save(task);
@@ -60,6 +61,9 @@ public class TaskService {
         TaskPriority priority = dto.priority() != null ? TaskPriority.valueOf(dto.priority().toUpperCase()) : null;
         task.updateDetails(dto.title(), dto.description(), priority, dto.dueDate());
 
+        cascadeBottomUp(task);
+        cascadeTopDown(task);
+
         task = taskRepository.save(task);
         return mapToResponse(task);
     }
@@ -68,7 +72,14 @@ public class TaskService {
     public void delete(UUID id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        Task parent = task.getParentTask();
+        
         taskRepository.delete(task);
+
+        if (parent != null) {
+            parent.getSubTasks().remove(task);
+            evaluateParentStatus(parent);
+        }
     }
     
     @Transactional
@@ -78,6 +89,8 @@ public class TaskService {
         TaskStatus newStatus = status.status() != null ? TaskStatus.valueOf(status.status().toUpperCase()) : null;
         if (newStatus != null) {
             task.updateStatus(newStatus);
+            cascadeBottomUp(task);
+            cascadeTopDown(task);
         }
         task = taskRepository.save(task);
         return mapToResponse(task);
@@ -88,12 +101,19 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
 
+        Task oldParent = task.getParentTask();
+
         if (dto.parentTaskId() != null) {
-            Task parentTask = taskRepository.findById(dto.parentTaskId())
+            Task newParent = taskRepository.findById(UUID.fromString(dto.parentTaskId()))
                     .orElseThrow(() -> new TaskNotFoundException("Parent task not found with id: " + dto.parentTaskId()));
-            task.assignParent(parentTask);
+            task.assignParent(newParent);
+            cascadeBottomUp(task);
         } else {
             task.assignParent(null);
+        }
+
+        if (oldParent != null && (dto.parentTaskId() == null || !oldParent.getId().equals(dto.parentTaskId()))) {
+            evaluateParentStatus(oldParent);
         }
 
         task = taskRepository.save(task);
@@ -113,7 +133,83 @@ public class TaskService {
             return subTask;
         }).toList();
 
+        for (Task subTask : subTasksToSave) {
+            cascadeBottomUp(subTask);
+        }
+
         return taskRepository.saveAll(subTasksToSave).stream().map(this::mapToResponse).toList();
+    }
+
+    private void cascadeBottomUp(Task task) {
+        Task parent = task.getParentTask();
+        if (parent == null) return;
+
+        boolean changed = false;
+
+        if (task.getStatus() == TaskStatus.IN_PROGRESS && parent.getStatus() == TaskStatus.TODO) {
+            parent.updateStatus(TaskStatus.IN_PROGRESS);
+            changed = true;
+        }
+
+        if (task.getDueDate() != null && parent.getDueDate() != null && task.getDueDate().isAfter(parent.getDueDate())) {
+            parent.updateDueDate(task.getDueDate());
+            changed = true;
+        }
+
+        if (task.getStatus() == TaskStatus.DONE && parent.getStatus() != TaskStatus.DONE) {
+            if (!parent.getSubTasks().isEmpty()) {
+                boolean allChildrenDone = parent.getSubTasks().stream()
+                        .allMatch(child -> child.getStatus() == TaskStatus.DONE);
+                if (allChildrenDone) {
+                    parent.updateStatus(TaskStatus.DONE);
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            cascadeBottomUp(parent);
+        }
+    }
+
+    private void cascadeTopDown(Task task) {
+        if (task.getSubTasks() == null || task.getSubTasks().isEmpty()) return;
+
+        for (Task child : task.getSubTasks()) {
+            boolean changed = false;
+
+            if (task.getStatus() == TaskStatus.DONE && child.getStatus() != TaskStatus.DONE) {
+                child.updateStatus(TaskStatus.DONE);
+                changed = true;
+            }
+
+            if (task.getStatus() == TaskStatus.TODO && child.getStatus() == TaskStatus.IN_PROGRESS) {
+                child.updateStatus(TaskStatus.TODO);
+                changed = true;
+            }
+
+            if (child.getDueDate() != null && task.getDueDate() != null && child.getDueDate().isAfter(task.getDueDate())) {
+                child.updateDueDate(task.getDueDate());
+                changed = true;
+            }
+
+            if (changed) {
+                cascadeTopDown(child);
+            }
+        }
+    }
+
+    private void evaluateParentStatus(Task parent) {
+        if (parent == null || parent.getStatus() == TaskStatus.DONE) return;
+
+        if (!parent.getSubTasks().isEmpty()) {
+            boolean allChildrenDone = parent.getSubTasks().stream()
+                    .allMatch(child -> child.getStatus() == TaskStatus.DONE);
+            if (allChildrenDone) {
+                parent.updateStatus(TaskStatus.DONE);
+                cascadeBottomUp(parent);
+            }
+        }
     }
 
     private TaskResponseDTO mapToResponse(Task task) {
