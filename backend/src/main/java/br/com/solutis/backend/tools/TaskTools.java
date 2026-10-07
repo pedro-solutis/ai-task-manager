@@ -51,6 +51,25 @@ public class TaskTools {
                 .toList();
     }
 
+    @Tool(description = "Count the number of tasks based on filters. All parameters are optional. " +
+            "- status: filter by task status (TODO, IN_PROGRESS, DONE). " +
+            "- priority: filter by task priority (LOW, MEDIUM, HIGH). " +
+            "- maxDueDate: maximum due date in ISO-8601 format (YYYY-MM-DDTHH:mm:ss). " +
+            "- pendingOnly: if 'true', counts only tasks that do NOT have the DONE status.")
+    public long countTasks(
+            String status,
+            String priority,
+            String maxDueDate,
+            Boolean pendingOnly) {
+
+        TaskStatus taskStatus = status != null && !status.isBlank() ? TaskStatus.valueOf(status.toUpperCase()) : null;
+        TaskPriority taskPriority = priority != null && !priority.isBlank() ? TaskPriority.valueOf(priority.toUpperCase()) : null;
+        LocalDateTime date = maxDueDate != null && !maxDueDate.isBlank() ? LocalDateTime.parse(maxDueDate) : null;
+        boolean excludeDone = Boolean.TRUE.equals(pendingOnly);
+
+        return taskRepository.countTasks(taskStatus, taskPriority, date, excludeDone);
+    }
+
     private TaskResponseDTO mapToResponse(Task task) {
         List<TaskResponseDTO> subTasksDTO = task.getSubTasks() != null
                 ? task.getSubTasks().stream().map(this::mapToResponse).toList()

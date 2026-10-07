@@ -39,4 +39,20 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         @Param("due_date") LocalDateTime dueDate,
         @Param("excludeDone") boolean excludeDone
     );
+
+    @Query(
+        """
+            SELECT COUNT(t) FROM Task t
+            WHERE (:status IS NULL OR t.status = :status)
+            AND (:priority IS NULL OR t.priority = :priority)
+            AND (cast(:due_date as timestamp) IS NULL OR t.dueDate <= :due_date)
+            AND (:excludeDone = false OR t.status != 'DONE')
+        """
+    )
+    long countTasks(
+        @Param("status") TaskStatus status,
+        @Param("priority") TaskPriority priority,
+        @Param("due_date") LocalDateTime dueDate,
+        @Param("excludeDone") boolean excludeDone
+    );
 }
