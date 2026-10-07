@@ -17,6 +17,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Tasks")
 @RestController
 @RequestMapping("/tasks")
 @RequiredArgsConstructor
@@ -24,16 +29,22 @@ public class TaskController {
 
     private final TaskService taskService;
 
+    @Operation(summary = "Find all tasks")
+    @ApiResponse(responseCode = "200", description = "Successful operation")
     @GetMapping
     public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(taskService.findAll(pageable));
     }
 
+    @Operation(summary = "Find task by ID")
+    @ApiResponse(responseCode = "200", description = "Successful operation")
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponseDTO> findById(@PathVariable("id") UUID taskId) {
         return ResponseEntity.ok(taskService.findById(taskId));
     }
 
+    @Operation(summary = "Create task")
+    @ApiResponse(responseCode = "201", description = "Successful operation")
     @PostMapping
     public ResponseEntity<TaskResponseDTO> create(@Valid @RequestBody TaskCreationDTO dto, UriComponentsBuilder uriBuilder) {
         TaskResponseDTO createdTask = taskService.create(dto);
@@ -41,21 +52,29 @@ public class TaskController {
         return ResponseEntity.created(location).body(createdTask);
     }
 
+    @Operation(summary = "Update task by ID")
+    @ApiResponse(responseCode = "200", description = "Successful operation")
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponseDTO> update(@PathVariable("id") UUID taskId, @Valid @RequestBody TaskUpdateDTO dto) {
         return ResponseEntity.ok(taskService.update(taskId, dto));
     }
     
+    @Operation(summary = "Update task status by ID")
+    @ApiResponse(responseCode = "200", description = "Successful operation")
     @PatchMapping ("/{id}/status")
     public ResponseEntity<TaskResponseDTO> updateStatus(@PathVariable("id") UUID taskId, @Valid @RequestBody TaskStatusUpdateDTO dto) {
         return ResponseEntity.ok(taskService.updateStatus(taskId, dto));
     }
 
+    @Operation(summary = "Update task parent by ID")
+    @ApiResponse(responseCode = "200", description = "Successful operation")
     @PatchMapping ("/{id}/parent")
     public ResponseEntity<TaskResponseDTO> updateParent(@PathVariable("id") UUID taskId, @RequestBody @Valid ParentTaskUpdateDTO dto) {
         return ResponseEntity.ok(taskService.updateParent(taskId, dto));
     }
 
+    @Operation(summary = "Delete task by ID")
+    @ApiResponse(responseCode = "204", description = "Successful operation")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") UUID taskId) {
         taskService.delete(taskId);
