@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { KanbanColumn } from './KanbanColumn.jsx';
 import { TaskDetailModal } from '../tasks/TaskDetailModal.jsx';
 import { TaskFormModal } from '../tasks/TaskFormModal.jsx';
+import { DecomposeResultModal } from '../tasks/DecomposeResultModal.jsx';
 import { TASK_STATUS } from '../../utils/constants.js';
 
 export function KanbanBoard() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const [parentTaskForNewSubtask, setParentTaskForNewSubtask] = useState(null);
+  const [subtasksToView, setSubtasksToView] = useState(null);
   
   const [tasks, setTasks] = useState([
-    { id: 1, title: 'Criar estrutura do Kanban', description: 'Implementar layout base', priority: 'HIGH', dueDate: '2026-10-10T12:00:00Z', status: 'TODO' }
+    { id: 1, title: 'Criar estrutura do Kanban', description: 'Implementar layout base', priority: 'HIGH', dueDate: '2026-10-10T12:00:00Z', status: 'TODO', subtasks: [{ title: 'Subtarefa Exemplo', description: 'Teste de visualização' }] }
   ]);
 
   const handleEdit = (task) => {
@@ -34,6 +37,14 @@ export function KanbanBoard() {
     // Futura integração: TaskService.updateStatus(taskId, newStatus);
   };
 
+  const handleViewSubtasks = (task) => {
+    setSubtasksToView(task.subtasks || []);
+  };
+
+  const handleCreateSubtask = (task) => {
+    setParentTaskForNewSubtask(task);
+  };
+
   return (
     <>
       <div className="flex justify-center gap-6 h-full min-h-[500px]">
@@ -50,6 +61,8 @@ export function KanbanBoard() {
               onTaskClick={setSelectedTask}
               onDropColumn={handleDropColumn}
               onDelete={handleDelete}
+              onViewSubtasks={handleViewSubtasks}
+              onCreateSubtask={handleCreateSubtask}
             />
           );
         })}
@@ -69,13 +82,25 @@ export function KanbanBoard() {
       )}
 
       <TaskFormModal 
-        isOpen={!!taskToEdit}
+        isOpen={!!taskToEdit || !!parentTaskForNewSubtask}
         initialData={taskToEdit}
-        onClose={() => setTaskToEdit(null)}
-        onSaved={() => {
-          console.log('[MOCK] Tarefa atualizada!');
+        parentId={parentTaskForNewSubtask?.id}
+        onClose={() => {
           setTaskToEdit(null);
+          setParentTaskForNewSubtask(null);
         }}
+        onSaved={() => {
+          console.log('[MOCK] Tarefa/Subtarefa salva!');
+          setTaskToEdit(null);
+          setParentTaskForNewSubtask(null);
+        }}
+      />
+
+      <DecomposeResultModal 
+        isOpen={subtasksToView !== null}
+        onClose={() => setSubtasksToView(null)}
+        subtasks={subtasksToView}
+        isCreating={false}
       />
     </>
   );

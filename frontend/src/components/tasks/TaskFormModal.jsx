@@ -5,12 +5,13 @@ import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
 import { TASK_PRIORITY } from '../../utils/constants.js';
 
-export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
+export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'MEDIUM',
-    dueDate: ''
+    dueDate: '',
+    parentId: parentId || null
   });
 
   useEffect(() => {
@@ -20,18 +21,20 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
           title: initialData.title || '',
           description: initialData.description || '',
           priority: initialData.priority || 'MEDIUM',
-          dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().slice(0, 16) : ''
+          dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().slice(0, 16) : '',
+          parentId: initialData.parentId || parentId || null
         });
       } else {
         setFormData({
           title: '',
           description: '',
           priority: 'MEDIUM',
-          dueDate: ''
+          dueDate: '',
+          parentId: parentId || null
         });
       }
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, parentId]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(null);
