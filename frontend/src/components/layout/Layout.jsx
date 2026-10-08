@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Sun, Moon, Plus, MessageSquareMore } from 'lucide-react';
+import { ChatAssistant } from '../chat/ChatAssistant.jsx';
 
-export function Layout({ children }) {
+export function Layout({ children, onNewTaskClick }) {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'dark';
   });
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -41,7 +43,10 @@ export function Layout({ children }) {
             )}
           </button>
             {/* Botão de criar nota tarefa */}
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center gap-2 transition-colors">
+          <button 
+            onClick={onNewTaskClick}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center gap-2 transition-colors"
+          >
             <Plus className="h-5 w-5" />
             Nova Tarefa
           </button>
@@ -56,17 +61,21 @@ export function Layout({ children }) {
 
       {/* Botão Flutuante do Chat da IA */}
       <button 
+        onClick={() => setIsChatOpen(!isChatOpen)}
         className="fixed bottom-6 right-6 p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center group"
         aria-label="Abrir Assistente de Chat IA"
         title="Assistente IA"
       >
         <MessageSquareMore className="h-6 w-6" />
-        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-        </span>
+        {!isChatOpen && (
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          </span>
+        )}
       </button>
+
+      <ChatAssistant isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }
-
