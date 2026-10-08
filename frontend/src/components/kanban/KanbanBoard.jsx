@@ -1,31 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { KanbanColumn } from './KanbanColumn.jsx';
 import { TaskDetailModal } from '../tasks/TaskDetailModal.jsx';
 import { TaskFormModal } from '../tasks/TaskFormModal.jsx';
 import { DecomposeResultModal } from '../tasks/DecomposeResultModal.jsx';
 import { TASK_STATUS } from '../../utils/constants.js';
+import { TaskService } from '../../services/TaskService.js';
 
-export function KanbanBoard() {
+export function KanbanBoard({ refreshTick }) {
   const [selectedTask, setSelectedTask] = useState(null);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [parentTaskForNewSubtask, setParentTaskForNewSubtask] = useState(null);
   
-  // subtasksToView agora vai guardar o ID da task parent para podermos atualizar o modal em tempo real
   const [viewingSubtasksParentId, setViewingSubtasksParentId] = useState(null);
   
-  const [tasks, setTasks] = useState([
-    { 
-      id: 1, 
-      title: 'Criar estrutura do Kanban', 
-      description: 'Implementar layout base', 
-      priority: 'HIGH', 
-      dueDate: '2026-10-10T12:00:00Z', 
-      status: 'TODO', 
-      subtasks: [
-        { id: 101, title: 'Subtarefa Exemplo', description: 'Teste de visualização', status: 'TODO', parentId: 1 }
-      ] 
+  const [tasks, setTasks] = useState([]);
+
+  const loadTasks = async () => {
+    try {
+      const response = await TaskService.findAll(0, 1000);
+      let data = response.content || response.data || response;
+      if (!Array.isArray(data)) data = [];
+      
+      data = data.map(task => ({
+        ...task,
+        subtasks: task.subTasks || task.subtasks || data.filter(t => t.parentTaskId === task.id)
+      }));
+
+      setTasks(data);
+    } catch (error) {
+      console.error('Erro ao buscar tarefas:', error);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, [refreshTick]);
 
   const parentTaskForView = tasks.find(t => t.id === viewingSubtasksParentId);
   const subtasksToView = parentTaskForView?.subtasks || null;
@@ -35,13 +44,18 @@ export function KanbanBoard() {
     setTaskToEdit(task);
   };
 
-  const handleDelete = (taskId) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-    alert(`[MOCK] Tarefa ${taskId} excluída com sucesso!`);
-    setSelectedTask(null);
+  const handleDelete = async (taskId) => {
+    try {
+      await TaskService.delete(taskId);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+      alert('Erro ao deletar tarefa');
+    }
   };
 
-  const handleDropColumn = (e, newStatus) => {
+  const handleDropColumn = async (e, newStatus) => {
     const taskId = e.dataTransfer.getData('taskId');
     if (!taskId) return;
     
@@ -49,7 +63,13 @@ export function KanbanBoard() {
       t.id.toString() === taskId ? { ...t, status: newStatus } : t
     ));
     
-    // Futura integração: TaskService.updateStatus(taskId, newStatus);
+    try {
+      await TaskService.updateStatus(taskId, newStatus);
+      loadTasks();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      loadTasks();
+    }
   };
 
   const handleViewSubtasks = (task) => {
@@ -60,10 +80,11 @@ export function KanbanBoard() {
     setParentTaskForNewSubtask(task);
   };
 
-  const handleAdvanceSubtaskStatus = (subtask) => {
+  const handleAdvanceSubtaskStatus = async (subtask) => {
     const nextStatus = subtask.status === 'TODO' ? 'IN_PROGRESS' : subtask.status === 'IN_PROGRESS' ? 'DONE' : 'DONE';
+    
     setTasks(prev => prev.map(t => {
-      if (t.id === subtask.parentId) {
+      if (t.id === (subtask.parentTaskId || subtask.parentId)) {
         return {
           ...t,
           subtasks: t.subtasks.map(st => st.id === subtask.id ? { ...st, status: nextStatus } : st)
@@ -71,12 +92,21 @@ export function KanbanBoard() {
       }
       return t;
     }));
+
+    try {
+      await TaskService.updateStatus(subtask.id, nextStatus);
+      loadTasks();
+    } catch (error) {
+      console.error('Erro ao atualizar sub-tarefa:', error);
+      loadTasks();
+    }
   };
 
-  const handleRetrogressSubtaskStatus = (subtask) => {
+  const handleRetrogressSubtaskStatus = async (subtask) => {
     const prevStatus = subtask.status === 'DONE' ? 'IN_PROGRESS' : subtask.status === 'IN_PROGRESS' ? 'TODO' : 'TODO';
+    
     setTasks(prev => prev.map(t => {
-      if (t.id === subtask.parentId) {
+      if (t.id === (subtask.parentTaskId || subtask.parentId)) {
         return {
           ...t,
           subtasks: t.subtasks.map(st => st.id === subtask.id ? { ...st, status: prevStatus } : st)
@@ -84,31 +114,44 @@ export function KanbanBoard() {
       }
       return t;
     }));
+
+    try {
+      await TaskService.updateStatus(subtask.id, prevStatus);
+      loadTasks();
+    } catch (error) {
+      console.error('Erro ao retroceder sub-tarefa:', error);
+      loadTasks();
+    }
   };
 
   const handleEditSubtask = (subtask) => {
-    // Fechar a modal de subtarefas e abrir a modal de edição de tarefa
     setViewingSubtasksParentId(null);
     setTaskToEdit(subtask);
   };
 
-  const handleDeleteSubtask = (subtask) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === subtask.parentId) {
-        return {
-          ...t,
-          subtasks: t.subtasks.filter(st => st.id !== subtask.id)
-        };
-      }
-      return t;
-    }));
+  const handleDeleteSubtask = async (subtask) => {
+    try {
+      await TaskService.delete(subtask.id);
+      setTasks(prev => prev.map(t => {
+        if (t.id === (subtask.parentTaskId || subtask.parentId)) {
+          return {
+            ...t,
+            subtasks: t.subtasks.filter(st => st.id !== subtask.id)
+          };
+        }
+        return t;
+      }));
+    } catch (error) {
+      console.error('Erro ao deletar sub-tarefa:', error);
+      alert('Erro ao deletar sub-tarefa');
+    }
   };
 
   return (
     <>
       <div className="flex justify-center gap-6 h-full min-h-[500px]">
         {Object.entries(TASK_STATUS).map(([statusKey, config]) => {
-          const columnTasks = tasks.filter(t => t.status === statusKey);
+          const columnTasks = tasks.filter(t => t.status === statusKey && !t.parentTaskId);
           return (
             <KanbanColumn 
               key={statusKey}
@@ -133,9 +176,16 @@ export function KanbanBoard() {
           onClose={() => setSelectedTask(null)} 
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onUpdateTask={(updates) => {
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, ...updates } : t));
-            setSelectedTask(prev => ({ ...prev, ...updates }));
+          onUpdateTask={async (updates) => {
+            const updatedTask = { ...selectedTask, ...updates };
+            setTasks(prev => prev.map(t => t.id === selectedTask.id ? updatedTask : t));
+            setSelectedTask(updatedTask);
+            try {
+              await TaskService.update(selectedTask.id, updatedTask);
+              loadTasks();
+            } catch (error) {
+              console.error('Erro ao atualizar tarefa via IA:', error);
+            }
           }}
         />
       )}
@@ -150,7 +200,7 @@ export function KanbanBoard() {
           setParentTaskForNewSubtask(null);
         }}
         onSaved={() => {
-          console.log('[MOCK] Tarefa/Subtarefa salva!');
+          loadTasks();
           setTaskToEdit(null);
           setParentTaskForNewSubtask(null);
         }}
