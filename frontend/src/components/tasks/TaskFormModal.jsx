@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { EnhanceButton } from './EnhanceButton.jsx';
 import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
+import { TASK_PRIORITY } from '../../utils/constants.js';
 
 export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
   const [formData, setFormData] = useState({
@@ -105,9 +106,9 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
                 onChange={handleChange}
                 className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md px-3 py-2 text-slate-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                <option value="LOW">Baixa</option>
-                <option value="MEDIUM">Média</option>
-                <option value="HIGH">Alta</option>
+                {Object.entries(TASK_PRIORITY).map(([key, config]) => (
+                  <option key={key} value={key}>{config.label}</option>
+                ))}
               </select>
             </div>
             <div>

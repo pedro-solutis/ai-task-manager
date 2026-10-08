@@ -1,14 +1,8 @@
 import { Calendar, Flag } from 'lucide-react';
+import { TASK_PRIORITY } from '../../utils/constants.js';
 
 export function KanbanCard({ task, onClick }) {
-  const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'HIGH': return 'text-red-500';
-      case 'MEDIUM': return 'text-yellow-500';
-      case 'LOW': return 'text-green-500';
-      default: return 'text-gray-500';
-    }
-  };
+  const priorityConfig = TASK_PRIORITY[task.priority] || { label: task.priority, colorClass: 'text-gray-500' };
 
   return (
     <div 
@@ -24,8 +18,8 @@ export function KanbanCard({ task, onClick }) {
         <div className="flex items-center gap-3 pt-2 mt-1 border-t border-gray-100 dark:border-gray-600/50 text-xs text-gray-500 dark:text-gray-400">
           {task.priority && (
             <div className="flex items-center gap-1">
-              <Flag className={`h-3 w-3 ${getPriorityColor(task.priority)}`} />
-              <span className="font-medium">{task.priority === 'HIGH' ? 'Alta' : task.priority === 'MEDIUM' ? 'Média' : 'Baixa'}</span>
+              <Flag className={`h-3 w-3 ${priorityConfig.colorClass}`} />
+              <span className="font-medium">{priorityConfig.label}</span>
             </div>
           )}
           

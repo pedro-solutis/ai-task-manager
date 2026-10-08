@@ -3,28 +3,15 @@ import { X, Calendar, Flag, Pencil, Trash2 } from 'lucide-react';
 import { EnhanceButton } from './EnhanceButton.jsx';
 import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
+import { TASK_STATUS, TASK_PRIORITY } from '../../utils/constants.js';
 
 export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask }) {
   const [aiLoading, setAiLoading] = useState(false);
 
   if (!task) return null;
 
-  const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'HIGH': return 'text-red-500';
-      case 'MEDIUM': return 'text-yellow-500';
-      case 'LOW': return 'text-green-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const statusColors = {
-    TODO: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    IN_PROGRESS: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-    DONE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-  };
-
-  const statusColorClass = statusColors[task.status] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+  const statusConfig = TASK_STATUS[task.status] || { label: task.status, colorClass: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' };
+  const priorityConfig = TASK_PRIORITY[task.priority] || { label: task.priority, colorClass: 'text-gray-500' };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
@@ -33,8 +20,8 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask 
           <h2 className="text-xl font-bold text-slate-800 dark:text-gray-100">Detalhes da Tarefa</h2>
           <div className="flex items-center gap-3">
             {task.status && (
-              <span className={`px-2.5 py-1 text-xs font-semibold uppercase tracking-wider rounded-md ${statusColorClass}`}>
-                {task.status === 'TODO' ? 'A Fazer' : task.status === 'IN_PROGRESS' ? 'Em Andamento' : task.status === 'DONE' ? 'Concluído' : task.status}
+              <span className={`px-2.5 py-1 text-xs font-semibold uppercase tracking-wider rounded-md ${statusConfig.colorClass}`}>
+                {statusConfig.label}
               </span>
             )}
             <button onClick={onClose} className="text-gray-500 hover:text-slate-800 dark:hover:text-white transition-colors">
@@ -52,8 +39,8 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask 
           <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             {task.priority && (
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <Flag className={`h-3 w-3 ${getPriorityColor(task.priority)}`} />
-                <span>Prioridade: <span className="font-semibold">{task.priority}</span></span>
+                <Flag className={`h-4 w-4 ${priorityConfig.colorClass}`} />
+                <span>Prioridade: <span className="font-semibold">{priorityConfig.label}</span></span>
               </div>
             )}
             

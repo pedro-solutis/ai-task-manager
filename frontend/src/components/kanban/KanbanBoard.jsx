@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { KanbanColumn } from './KanbanColumn.jsx';
 import { TaskDetailModal } from '../tasks/TaskDetailModal.jsx';
 import { TaskFormModal } from '../tasks/TaskFormModal.jsx';
+import { TASK_STATUS } from '../../utils/constants.js';
 
 export function KanbanBoard() {
   const [selectedTask, setSelectedTask] = useState(null);
@@ -28,27 +29,16 @@ export function KanbanBoard() {
   return (
     <>
       <div className="flex justify-center gap-6 h-full min-h-[500px]">
-        <KanbanColumn 
-          title="A Fazer" 
-          count={mockTasks.TODO.length}
-          badgeClass="bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300"
-          tasks={mockTasks.TODO}
-          onTaskClick={setSelectedTask}
-        />
-        <KanbanColumn 
-          title="Em Andamento" 
-          count={mockTasks.IN_PROGRESS.length}
-          badgeClass="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-          tasks={mockTasks.IN_PROGRESS}
-          onTaskClick={setSelectedTask}
-        />
-        <KanbanColumn 
-          title="Concluído" 
-          count={mockTasks.DONE.length}
-          badgeClass="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-          tasks={mockTasks.DONE}
-          onTaskClick={setSelectedTask}
-        />
+        {Object.entries(TASK_STATUS).map(([statusKey, config]) => (
+          <KanbanColumn 
+            key={statusKey}
+            title={config.label} 
+            count={mockTasks[statusKey]?.length || 0}
+            badgeClass={config.colorClass}
+            tasks={mockTasks[statusKey] || []}
+            onTaskClick={setSelectedTask}
+          />
+        ))}
       </div>
 
       {selectedTask && (
