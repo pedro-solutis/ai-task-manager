@@ -3,6 +3,7 @@ package br.com.solutis.backend.controller;
 import br.com.solutis.backend.dto.request.ChatRequestDTO;
 import br.com.solutis.backend.dto.response.ChatResponseDTO;
 import br.com.solutis.backend.service.ChatService;
+import br.com.solutis.backend.service.AiProviderService;
 import tools.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,9 @@ class ChatControllerTest {
 
     @MockitoBean 
     private ChatService chatService;
+
+    @MockitoBean
+    private AiProviderService aiProviderService;
 
     @Test
     @DisplayName("Should process chat request and return response")

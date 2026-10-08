@@ -5,10 +5,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class ChatClientConfig {
@@ -20,22 +18,13 @@ public class ChatClientConfig {
             .build();
     }
 
-    @Bean
-    @Primary
-    @ConditionalOnProperty (name = "app.ai.provider", havingValue = "gemini", matchIfMissing = true)
-    public ChatModel geminiChatModel(@Qualifier("googleGenAiChatModel") ChatModel gemini){
-        return gemini;
+    @Bean(name = "gemini")
+    public ChatClient.Builder geminiChatClientBuilder(@Qualifier("googleGenAiChatModel") ChatModel gemini){
+        return ChatClient.builder(gemini);
     }
 
-    @Bean
-    @Primary
-        @ConditionalOnProperty (name = "app.ai.provider", havingValue = "ollama", matchIfMissing = true)
-    public ChatModel ollamaChatModel(@Qualifier("ollamaChatModel") ChatModel ollama){
-        return ollama;
-    }
-
-    @Bean  
-    public ChatClient.Builder chatClient(ChatModel chatModel){
-        return ChatClient.builder(chatModel);
+    @Bean(name = "ollama")
+    public ChatClient.Builder ollamaChatClientBuilder(@Qualifier("ollamaChatModel") ChatModel ollama){
+        return ChatClient.builder(ollama);
     }
 }

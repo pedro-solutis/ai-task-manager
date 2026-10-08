@@ -1,6 +1,7 @@
 package br.com.solutis.backend.ai;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -19,6 +20,7 @@ import br.com.solutis.backend.dto.response.TaskDecomposeResponseDTO;
 import br.com.solutis.backend.dto.response.TaskEnhancedResponseDTO;
 import br.com.solutis.backend.tools.TaskTools;
 import br.com.solutis.backend.exception.AiResponseValidationException;
+import br.com.solutis.backend.service.AiProviderService;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +28,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor 
 public class SpringAiTaskService implements TaskAiService{
 
-    private final ChatClient.Builder chatClientBuilder;
+    private final Map<String, ChatClient.Builder> chatClients;
+    private final AiProviderService aiProviderService;
     private final ChatMemory chatMemory;
     private final TaskTools taskTools;
     private final Validator validator;
@@ -41,10 +44,16 @@ public class SpringAiTaskService implements TaskAiService{
     private Resource assistantPrompt;
     @Value ("${app.ai.context.guardrails}")
     private Resource commonGuardrails;
+    
+    private ChatClient getActiveChatClient() {
+        String provider = aiProviderService.getActiveProvider();
+        ChatClient.Builder builder = chatClients.getOrDefault(provider, chatClients.get("gemini"));
+        return builder.build();
+    }
 
     @Override
     public TaskEnhancedResponseDTO enhanceTask(TaskEnhanceRequestDTO request) {
-        TaskEnhancedResponseDTO response = chatClientBuilder.build().prompt()
+        TaskEnhancedResponseDTO response = getActiveChatClient().prompt()
             .system(commonGuardrails)
             .user(
                 u -> u.text(enhancePrompt)
@@ -60,7 +69,7 @@ public class SpringAiTaskService implements TaskAiService{
 
     @Override
     public TaskAnalysisResponseDTO analyzeTask(TaskAnalysisRequestDTO request) {
-        TaskAnalysisResponseDTO response = chatClientBuilder.build().prompt()
+        TaskAnalysisResponseDTO response = getActiveChatClient().prompt()
             .system(commonGuardrails)
             .user(
                 u -> u.text(analyzePrompt)
@@ -79,7 +88,7 @@ public class SpringAiTaskService implements TaskAiService{
 
     @Override
     public TaskDecomposeResponseDTO decomposeTask(TaskDecomposeRequestDTO request) {
-        TaskDecomposeResponseDTO response = chatClientBuilder.build().prompt()
+        TaskDecomposeResponseDTO response = getActiveChatClient().prompt()
             .system(commonGuardrails)
             .user(
                 u -> u.text(decomposePrompt)
@@ -99,7 +108,7 @@ public class SpringAiTaskService implements TaskAiService{
     public ChatResponseDTO chat(ChatRequestDTO request) {
         String chatId = request.chatId() != null && !request.chatId().isEmpty() ? request.chatId() : java.util.UUID.randomUUID().toString();
         
-        String response = chatClientBuilder.build().prompt()
+        String response = getActiveChatClient().prompt()
             .system(
                 s -> s.text(assistantPrompt)
                 .param("currentTimestamp", LocalDateTime.now())

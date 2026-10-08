@@ -4,6 +4,7 @@ import br.com.solutis.backend.dto.request.TaskEnhanceRequestDTO;
 import br.com.solutis.backend.dto.response.TaskEnhancedResponseDTO;
 import br.com.solutis.backend.exception.AiResponseValidationException;
 import br.com.solutis.backend.tools.TaskTools;
+import br.com.solutis.backend.service.AiProviderService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Path;
 import jakarta.validation.Validator;
@@ -20,6 +21,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.core.io.Resource;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -33,6 +35,12 @@ class SpringAiTaskServiceTest {
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ChatClient.Builder chatClientBuilder;
+
+    @Mock
+    private Map<String, ChatClient.Builder> chatClients;
+
+    @Mock
+    private AiProviderService aiProviderService;
 
     @Mock
     private ChatMemory chatMemory;
@@ -49,6 +57,8 @@ class SpringAiTaskServiceTest {
     @BeforeEach
     void setUp() {
         when(validator.validate(any())).thenReturn(Collections.emptySet());
+        when(aiProviderService.getActiveProvider()).thenReturn("gemini");
+        when(chatClients.getOrDefault(any(), any())).thenReturn(chatClientBuilder);
     }
 
     @Test
