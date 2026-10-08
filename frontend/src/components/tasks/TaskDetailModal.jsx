@@ -1,13 +1,31 @@
-import { useState } from 'react';
-import { X, Calendar, Flag, Pencil } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Calendar, Flag, Pencil, Loader2 } from 'lucide-react';
 import { EnhanceButton } from './EnhanceButton.jsx';
 import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
 import { DeleteButton } from '../common/DeleteButton.jsx';
 import { TASK_STATUS, TASK_PRIORITY } from '../../utils/constants.js';
 
-export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask }) {
+export function TaskDetailModal({ task: initialTask, onClose, onEdit, onDelete, onUpdateTask }) {
   const [aiLoading, setAiLoading] = useState(false);
+  const [task, setTask] = useState(initialTask);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setTask(initialTask);
+  }, [initialTask]);
+
+  useEffect(() => {
+    if (initialTask?.id) {
+      setIsLoading(true);
+      import('../../services/TaskService.js').then(m => {
+        m.TaskService.findById(initialTask.id)
+          .then(data => setTask(data))
+          .catch(err => console.error('Erro ao buscar detalhes da tarefa:', err))
+          .finally(() => setIsLoading(false));
+      });
+    }
+  }, [initialTask?.id]);
 
   if (!task) return null;
 
@@ -18,7 +36,10 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask 
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-gray-100">Detalhes da Tarefa</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-gray-100">Detalhes da Tarefa</h2>
+            {isLoading && <Loader2 className="h-5 w-5 animate-spin text-blue-500" />}
+          </div>
           <div className="flex items-center gap-3">
             {task.status && (
               <span className={`px-2.5 py-1 text-xs font-semibold uppercase tracking-wider rounded-md ${statusConfig.colorClass}`}>
@@ -73,6 +94,23 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask 
                 onUpdate={onUpdateTask} 
                 disabled={aiLoading} 
                 onLoadingChange={setAiLoading} 
+                isCreating={true}
+                onCreateTasks={async (subtasks) => {
+                  try {
+                    for (const st of subtasks) {
+                      await import('../../services/TaskService.js').then(m => m.TaskService.create({ 
+                        ...st, 
+                        priority: task.priority || 'MEDIUM', 
+                        dueDate: task.dueDate, 
+                        parentTaskId: task.id 
+                      }));
+                    }
+                    if (onUpdateTask) onUpdateTask({});
+                    window.location.reload(); 
+                  } catch (e) {
+                    console.error('Erro ao criar subtarefas:', e);
+                  }
+                }}
               />
             </div>
           )}

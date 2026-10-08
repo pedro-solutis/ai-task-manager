@@ -4,8 +4,9 @@ import { EnhanceButton } from './EnhanceButton.jsx';
 import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
 import { TASK_PRIORITY } from '../../utils/constants.js';
+import { TaskService } from '../../services/TaskService.js';
 
-export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId, availableParents = [] }) {
+export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId, availableParents }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -38,6 +39,22 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId,
 
   const [isLoading, setIsLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(null);
+  const [parentsList, setParentsList] = useState(availableParents || []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (availableParents && availableParents.length > 0) {
+      setParentsList(availableParents);
+    } else {
+      TaskService.findAll(0, 1000).then(res => {
+        const data = res.content || res.data || res;
+        if (Array.isArray(data)) {
+          setParentsList(data);
+        }
+      }).catch(err => console.error(err));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -53,10 +70,21 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId,
          ...formData,
          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null
       };
+      if (!payload.parentId) {
+        delete payload.parentId;
+      } else {
+        payload.parentTaskId = payload.parentId;
+        delete payload.parentId;
+      }
       
-      // Mock temporário da API para criação da tarefa
-      await new Promise(resolve => setTimeout(resolve, 800));
-      console.log('Tarefa mockada criada:', payload);
+      if (initialData && initialData.id) {
+        await TaskService.update(initialData.id, payload);
+        if (formData.parentId !== initialData.parentId) {
+          await TaskService.updateParent(initialData.id, formData.parentId || null);
+        }
+      } else {
+        await TaskService.create(payload);
+      }
       
       if (onSaved) onSaved();
       onClose();
@@ -76,23 +104,37 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId,
          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null
       };
       
-      // 1. Cria a tarefa pai
-      await new Promise(resolve => setTimeout(resolve, 800));
-      const parentTaskId = Math.floor(Math.random() * 1000) + 100;
-      console.log('Tarefa pai criada via IA:', { ...payload, id: parentTaskId });
+      if (!payload.parentId) {
+        delete payload.parentId;
+      } else {
+        payload.parentTaskId = payload.parentId;
+        delete payload.parentId;
+      }
+      
+      let parentTaskId = initialData ? initialData.id : null;
+      
+      // 1. Cria ou atualiza a tarefa pai
+      if (parentTaskId) {
+        await TaskService.update(parentTaskId, payload);
+        if (formData.parentId !== initialData.parentId) {
+          await TaskService.updateParent(parentTaskId, formData.parentId || null);
+        }
+      } else {
+        const createdParent = await TaskService.create(payload);
+        parentTaskId = createdParent.id;
+      }
       
       // 2. Cria cada subtarefa individualmente
       if (subtasks && subtasks.length > 0) {
-        console.log(`Criando ${subtasks.length} subtarefas vinculadas ao pai ID: ${parentTaskId}...`);
         for (const subtask of subtasks) {
-          await new Promise(resolve => setTimeout(resolve, 300));
           const subtaskPayload = {
             title: subtask.title,
             description: subtask.description,
-            priority: payload.priority,
-            parentId: parentTaskId
+            priority: payload.priority || 'MEDIUM',
+            dueDate: payload.dueDate,
+            parentTaskId: parentTaskId
           };
-          console.log('Subtarefa criada individualmente via IA:', subtaskPayload);
+          await TaskService.create(subtaskPayload);
         }
       }
       
@@ -169,11 +211,11 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId,
             <select
               name="parentId"
               value={formData.parentId || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value ? parseInt(e.target.value) : null }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value ? e.target.value : null }))}
               className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md px-3 py-2 text-slate-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="">Sem tarefa pai</option>
-              {availableParents
+              {parentsList
                 .filter(t => !initialData || t.id !== initialData.id)
                 .map(t => (
                   <option key={t.id} value={t.id}>{t.title}</option>
@@ -200,7 +242,7 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId,
               onUpdate={(updates) => setFormData(prev => ({ ...prev, ...updates }))} 
               disabled={aiLoading} 
               onLoadingChange={setAiLoading}
-              isCreating={!initialData}
+              isCreating={true}
               onCreateTasks={handleCreateWithSubtasks}
             />
           </div>
