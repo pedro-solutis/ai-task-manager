@@ -52,6 +52,20 @@ services:
       ollama:
         condition: service_started
     restart: unless-stopped
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ai-task-manager-frontend
+    ports:
+      - "80:80"
+    env_file:
+      - .env
+    environment:
+      - VITE_BASE_URL=${VITE_BASE_URL}
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
