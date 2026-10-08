@@ -44,13 +44,28 @@ export function ChatAssistant({ isOpen, onClose }) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-slate-700 text-slate-800 dark:text-gray-100 rounded-bl-none'}`}>
-              {msg.text}
+        {messages.map((msg, index) => {
+          const formatText = (text) => {
+            if (!text) return null;
+            return text.split(/(\*\*.*?\*\*|\*.*?\*)/g).map((part, i) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+              }
+              if (part.startsWith('*') && part.endsWith('*')) {
+                return <em key={i} className="italic">{part.slice(1, -1)}</em>;
+              }
+              return part;
+            });
+          };
+
+          return (
+            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] p-3 rounded-lg text-sm whitespace-pre-wrap leading-relaxed ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-slate-700 text-slate-800 dark:text-gray-100 rounded-bl-none'}`}>
+                {formatText(msg.text)}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {isLoading && (
           <div className="flex justify-start">
             <div className="max-w-[80%] p-3 rounded-lg text-sm bg-gray-200 dark:bg-slate-700 flex gap-1 items-center rounded-bl-none">
