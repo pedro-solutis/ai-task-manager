@@ -6,6 +6,8 @@ export function KanbanCard({ task, onClick }) {
 
   return (
     <div 
+      draggable
+      onDragStart={(e) => e.dataTransfer.setData('taskId', task.id)}
       onClick={() => onClick && onClick(task)}
       className="p-4 rounded-md bg-white dark:bg-slate-700 shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer hover:border-blue-500 transition-colors flex flex-col gap-2"
     >
