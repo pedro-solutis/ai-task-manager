@@ -1,6 +1,6 @@
 import { KanbanCard } from './KanbanCard.jsx';
 
-export function KanbanColumn({ title, count, badgeClass, tasks }) {
+export function KanbanColumn({ title, count, badgeClass, tasks, onTaskClick }) {
   return (
     <div className="flex-1 min-w-[300px] max-w-sm rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-surface-dark flex flex-col">
       <div className="p-4 border-b border-gray-200 dark:border-gray-800 font-semibold flex items-center justify-between">
@@ -9,7 +9,7 @@ export function KanbanColumn({ title, count, badgeClass, tasks }) {
       </div>
       <div className="p-4 flex-1 space-y-3">
         {tasks.map(task => (
-          <KanbanCard key={task.id} task={task} />
+          <KanbanCard key={task.id} task={task} onClick={onTaskClick} />
         ))}
       </div>
     </div>
