@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X, Calendar, Flag, Pencil, Trash2 } from 'lucide-react';
+import { X, Calendar, Flag, Pencil } from 'lucide-react';
 import { EnhanceButton } from './EnhanceButton.jsx';
 import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
+import { DeleteButton } from '../common/DeleteButton.jsx';
 import { TASK_STATUS, TASK_PRIORITY } from '../../utils/constants.js';
 
 export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask }) {
@@ -89,13 +90,7 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask 
               </button>
             )}
             {onDelete && (
-              <button 
-                onClick={() => onDelete(task.id)} 
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-                Excluir
-              </button>
+              <DeleteButton variant="button" onClick={() => onDelete(task.id)} />
             )}
           </div>
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 rounded-md transition-colors">

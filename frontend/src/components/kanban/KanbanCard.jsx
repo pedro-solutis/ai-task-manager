@@ -1,5 +1,6 @@
-import { Calendar, Flag, Trash2 } from 'lucide-react';
+import { Calendar, Flag } from 'lucide-react';
 import { TASK_PRIORITY } from '../../utils/constants.js';
+import { DeleteButton } from '../common/DeleteButton.jsx';
 
 export function KanbanCard({ task, onClick, onDelete }) {
   const priorityConfig = TASK_PRIORITY[task.priority] || { label: task.priority, colorClass: 'text-gray-500' };
@@ -35,16 +36,11 @@ export function KanbanCard({ task, onClick, onDelete }) {
           </div>
           
           {onDelete && (
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(task.id);
-              }}
-              className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1"
-              title="Excluir tarefa"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            <DeleteButton 
+              onClick={() => onDelete(task.id)} 
+              variant="icon" 
+              label="Excluir tarefa" 
+            />
           )}
         </div>
       )}
