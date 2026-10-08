@@ -5,6 +5,27 @@ O AI Task Manager é uma aplicação web Full Stack para gerenciamento visual de
 
 ## Arquitetura e Serviços
 O projeto foi estruturado seguindo uma arquitetura moderna e desacoplada, separando a responsabilidade de apresentação, regra de negócio e processamento de IA.
+
+```mermaid
+graph TD
+    UI[Frontend: React SPA] -->|HTTP / JSON| API[Backend: Spring Boot]
+    
+    subgraph Backend [Backend Central - Java 21]
+        API --> SVC[TaskService: Regras de Negócio]
+        API --> FAC[TaskAiFacade: Orquestrador de IA]
+        FAC --> SVC
+        FAC --> AI_SVC[TaskAiService: Spring AI]
+    end
+    
+    subgraph Infraestrutura [Docker Compose]
+        DB[(PostgreSQL)]
+        LLM[Ollama Local]
+    end
+    
+    SVC -->|Spring Data JPA| DB
+    AI_SVC -->|REST| LLM
+```
+
 * **Frontend (React SPA):** Interface rica consumida diretamente do navegador, responsável pela interação drag-and-drop e pelas chamadas rest. Servida otimizada por um Nginx Alpine.
 * **Backend (Spring Boot):** Monolito central de regras de negócio, atuando também como "cérebro validador" que garante que os dados vindos da inteligência artificial estão estruturalmente corretos e condizentes antes de salvá-los no banco.
 * **Database (PostgreSQL):** Serviço responsável por garantir a integridade relacional, suporte a tarefas encadeadas e o status lógico dos registros.
