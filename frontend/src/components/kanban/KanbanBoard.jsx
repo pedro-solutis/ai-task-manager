@@ -15,6 +15,16 @@ export function KanbanBoard() {
     DONE: []
   };
 
+  const handleEdit = (task) => {
+    setSelectedTask(null);
+    setTaskToEdit(task);
+  };
+
+  const handleDelete = (taskId) => {
+    alert(`[MOCK] Tarefa ${taskId} excluída com sucesso!`);
+    setSelectedTask(null);
+  };
+
   return (
     <>
       <div className="flex justify-center gap-6 h-full min-h-[500px]">
@@ -45,8 +55,20 @@ export function KanbanBoard() {
         <TaskDetailModal 
           task={selectedTask} 
           onClose={() => setSelectedTask(null)} 
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       )}
+
+      <TaskFormModal 
+        isOpen={!!taskToEdit}
+        initialData={taskToEdit}
+        onClose={() => setTaskToEdit(null)}
+        onSaved={() => {
+          console.log('[MOCK] Tarefa atualizada!');
+          setTaskToEdit(null);
+        }}
+      />
     </>
   );
 }
