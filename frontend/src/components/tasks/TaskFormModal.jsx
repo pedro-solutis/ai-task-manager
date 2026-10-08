@@ -43,7 +43,7 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setIsLoading(true);
     try {
       const payload = {
@@ -51,7 +51,7 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null
       };
       
-      // Mock temporário da API
+      // Mock temporário da API para criação da tarefa
       await new Promise(resolve => setTimeout(resolve, 800));
       console.log('Tarefa mockada criada:', payload);
       
@@ -60,6 +60,44 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
     } catch (error) {
       console.error(error);
       alert('Erro ao salvar tarefa');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateWithSubtasks = async (subtasks) => {
+    setIsLoading(true);
+    try {
+      const payload = {
+         ...formData,
+         dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null
+      };
+      
+      // 1. Cria a tarefa pai
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const parentTaskId = Math.floor(Math.random() * 1000) + 100;
+      console.log('Tarefa pai criada via IA:', { ...payload, id: parentTaskId });
+      
+      // 2. Cria cada subtarefa individualmente
+      if (subtasks && subtasks.length > 0) {
+        console.log(`Criando ${subtasks.length} subtarefas vinculadas ao pai ID: ${parentTaskId}...`);
+        for (const subtask of subtasks) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          const subtaskPayload = {
+            title: subtask.title,
+            description: subtask.description,
+            priority: payload.priority,
+            parentId: parentTaskId
+          };
+          console.log('Subtarefa criada individualmente via IA:', subtaskPayload);
+        }
+      }
+      
+      if (onSaved) onSaved();
+      onClose();
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao criar tarefas com IA');
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +179,9 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData }) {
               formData={formData} 
               onUpdate={(updates) => setFormData(prev => ({ ...prev, ...updates }))} 
               disabled={aiLoading} 
-              onLoadingChange={setAiLoading} 
+              onLoadingChange={setAiLoading}
+              isCreating={!initialData}
+              onCreateTasks={handleCreateWithSubtasks}
             />
           </div>
 
