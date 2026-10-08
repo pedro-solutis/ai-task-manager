@@ -193,6 +193,11 @@ public class TaskService {
                 changed = true;
             }
 
+            if(task.getStatus() == TaskStatus.IN_PROGRESS && child.getStatus() == TaskStatus.TODO){
+                child.updateCascadeStatus(TaskStatus.IN_PROGRESS);
+                changed = true;
+            }
+
             if (child.getDueDate() != null && task.getDueDate() != null && child.getDueDate().isAfter(task.getDueDate())) {
                 child.updateDueDate(task.getDueDate());
                 changed = true;
