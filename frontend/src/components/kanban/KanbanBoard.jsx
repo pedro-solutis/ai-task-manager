@@ -49,6 +49,7 @@ export function KanbanBoard() {
               tasks={columnTasks}
               onTaskClick={setSelectedTask}
               onDropColumn={handleDropColumn}
+              onDelete={handleDelete}
             />
           );
         })}

@@ -1,6 +1,6 @@
 import { KanbanCard } from './KanbanCard.jsx';
 
-export function KanbanColumn({ statusId, title, count, badgeClass, tasks, onTaskClick, onDropColumn }) {
+export function KanbanColumn({ statusId, title, count, badgeClass, tasks, onTaskClick, onDropColumn, onDelete }) {
   const handleDragOver = (e) => e.preventDefault();
   
   const handleDrop = (e) => {
@@ -20,7 +20,7 @@ export function KanbanColumn({ statusId, title, count, badgeClass, tasks, onTask
       </div>
       <div className="p-4 flex-1 space-y-3">
         {tasks.map(task => (
-          <KanbanCard key={task.id} task={task} onClick={onTaskClick} />
+          <KanbanCard key={task.id} task={task} onClick={onTaskClick} onDelete={onDelete} />
         ))}
       </div>
     </div>
