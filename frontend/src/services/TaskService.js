@@ -1,10 +1,10 @@
 import api from './api';
 
 export const TaskService = {
-  // GET /tasks?page=&size=&sort&direction
-  findAll: async (page = 0, size = 10, sort = 'dueDate', direction = 'DESC') => {
+  // GET /tasks?sort&direction
+  findAll: async (sort = 'dueDate', direction = 'DESC') => {
     const response = await api.get('/tasks', {
-      params: { page, size, sort, direction }
+      params: { sort, direction }
     });
     return response.data;
   },

@@ -17,8 +17,8 @@ export function KanbanBoard({ refreshTick }) {
 
   const loadTasks = async () => {
     try {
-      const response = await TaskService.findAll(0, 1000);
-      let data = response.content || response.data || response;
+      const response = await TaskService.findAll();
+      let data = response || [];
       if (!Array.isArray(data)) data = [];
       
       data = data.map(task => ({

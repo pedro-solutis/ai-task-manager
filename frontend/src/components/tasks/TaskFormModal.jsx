@@ -47,8 +47,8 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId,
     if (availableParents && availableParents.length > 0) {
       setParentsList(availableParents);
     } else {
-      TaskService.findAll(0, 1000).then(res => {
-        const data = res.content || res.data || res;
+      TaskService.findAll().then(res => {
+        const data = res || [];
         if (Array.isArray(data)) {
           setParentsList(data);
         }
