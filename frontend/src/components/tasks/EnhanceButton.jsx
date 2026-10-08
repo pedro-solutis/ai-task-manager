@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import { AiService } from '../../services/AiService.js';
 
 export function EnhanceButton({ formData, onUpdate, disabled, onLoadingChange }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,19 +11,13 @@ export function EnhanceButton({ formData, onUpdate, disabled, onLoadingChange })
     if (onLoadingChange) onLoadingChange(true);
     
     try {
-      const payload = { title: formData.title, description: formData.description };
-      
-      // Mock temporário da API
-      const result = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve({
-            title: payload.title ? `[Melhorado] ${payload.title}` : '',
-            description: payload.description 
-              ? `${payload.description}\n\n[Texto expandido pela IA com detalhes e critérios de aceite...]` 
-              : 'Esta é uma descrição gerada automaticamente pela IA baseada no contexto fornecido.'
-          });
-        }, 1200);
-      });
+      let result;
+      if (formData.id) {
+        result = await AiService.enhanceById(formData.id);
+      } else {
+        const payload = { title: formData.title, description: formData.description };
+        result = await AiService.enhancePreview(payload);
+      }
       
       const updates = {};
       if (result.title) updates.title = result.title;

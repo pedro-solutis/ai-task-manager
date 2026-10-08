@@ -55,7 +55,7 @@ export function AnalysisResultModal({ isOpen, onClose, result, onApply }) {
 
           <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg border border-gray-100 dark:border-gray-600">
             <h3 className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">Motivo</h3>
-            <p className="text-slate-800 dark:text-gray-100 text-sm leading-relaxed">{result.reason}</p>
+            <p className="text-slate-800 dark:text-gray-100 text-sm leading-relaxed">{result.analysisReason}</p>
           </div>
         </div>
 

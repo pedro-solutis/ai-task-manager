@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Activity } from 'lucide-react';
+import { AiService } from '../../services/AiService.js';
 import { AnalysisResultModal } from './AnalysisResultModal.jsx';
 
 export function AnalyzeButton({ formData, onUpdate, disabled, onLoadingChange }) {
@@ -13,17 +14,18 @@ export function AnalyzeButton({ formData, onUpdate, disabled, onLoadingChange })
     if (onLoadingChange) onLoadingChange(true);
     
     try {
-      // Mock temporário da API
-      const result = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve({
-            priority: 'HIGH',
-            complexity: 'HIGH',
-            estimatedHours: 8,
-            reason: 'Esta é uma análise simulada com base no título e descrição.'
-          });
-        }, 1200);
-      });
+      let result;
+      if (formData.id) {
+        result = await AiService.analyzeById(formData.id);
+      } else {
+        const payload = { 
+          title: formData.title, 
+          description: formData.description,
+          priority: formData.priority,
+          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null
+        };
+        result = await AiService.analyzePreview(payload);
+      }
       
       setAnalysisResult(result);
       setShowModal(true);

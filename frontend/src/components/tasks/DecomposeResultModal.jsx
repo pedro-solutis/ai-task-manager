@@ -54,7 +54,7 @@ export function DecomposeResultModal({ isOpen, onClose, subtasks, isCreating, on
                           )}
                         </div>
                         <div className="flex items-center gap-1">
-                          {task.status !== 'TODO' && onRetrogressStatus && (
+                          {task.status !== 'TODO' && task.status !== 'DONE' && onRetrogressStatus && (
                             <button 
                               onClick={() => onRetrogressStatus(task)} 
                               title="Retroceder Status"

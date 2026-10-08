@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Network } from 'lucide-react';
+import { AiService } from '../../services/AiService.js';
 import { DecomposeResultModal } from './DecomposeResultModal.jsx';
 
 export function DecomposeButton({ formData, onUpdate, disabled, onLoadingChange, isCreating, onCreateTasks }) {
@@ -13,18 +14,20 @@ export function DecomposeButton({ formData, onUpdate, disabled, onLoadingChange,
     if (onLoadingChange) onLoadingChange(true);
     
     try {
-      // Mock temporário da API
-      const result = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve([
-            { title: 'Subtarefa 1', description: 'Parte 1 da tarefa' },
-            { title: 'Subtarefa 2', description: 'Parte 2 da tarefa' },
-            { title: 'Subtarefa 3', description: 'Parte 3 da tarefa' }
-          ]);
-        }, 1500);
-      });
+      let result;
+      if (formData.id) {
+        result = await AiService.decomposeById(formData.id);
+      } else {
+        const payload = { 
+          title: formData.title, 
+          description: formData.description,
+          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : new Date().toISOString()
+        };
+        result = await AiService.decomposePreview(payload);
+      }
       
-      setDecomposeResult(result);
+      const subtasksArray = Array.isArray(result) ? result : (result.subTasks || result.subtasks || []);
+      setDecomposeResult(subtasksArray);
       setShowModal(true);
       
     } catch (error) {
