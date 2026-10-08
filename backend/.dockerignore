@@ -1,0 +1,27 @@
+# Diretórios de compilação
+target/
+!target/*.jar
+
+# IDEs e Editores
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+
+# Git
+.git/
+.gitignore
+
+# Logs e arquivos de sistema
+*.log
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários e executáveis
+*.class
+*.war
+
