@@ -8,6 +8,12 @@ export const ChatService = {
       prompt
     });
     return response.data;
+  },
+
+  // PUT /chat/provider/{provider}
+  changeProvider: async (provider) => {
+    const response = await api.put(`/chat/provider/${provider}`);
+    return response.data;
   }
 };
 

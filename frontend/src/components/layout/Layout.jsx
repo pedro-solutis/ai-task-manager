@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Sun, Moon, Plus, MessageSquareMore } from 'lucide-react';
+import { Sun, Moon, Plus, MessageSquareMore, Cpu } from 'lucide-react';
 import { ChatAssistant } from '../chat/ChatAssistant.jsx';
+import { ChatService } from '../../services/ChatService';
 
 export function Layout({ children, onNewTaskClick }) {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'dark';
   });
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [provider, setProvider] = useState('gemini');
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -21,6 +23,16 @@ export function Layout({ children, onNewTaskClick }) {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const handleProviderChange = async (e) => {
+    const newProvider = e.target.value;
+    setProvider(newProvider);
+    try {
+      await ChatService.changeProvider(newProvider);
+    } catch (err) {
+      console.error('Failed to change provider', err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-200">
       {/* Barra superior do cabeçalho */}
@@ -30,7 +42,20 @@ export function Layout({ children, onNewTaskClick }) {
         </h1>
         
         <div className="flex items-center gap-4">
-          {/* Botão de mudança de tema */}
+          {/* Lista de modelos */}
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700">
+            <Cpu className="h-4 w-4 text-blue-500" />
+            <select 
+              value={provider}
+              onChange={handleProviderChange}
+              className="bg-transparent border-none text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-0 outline-none cursor-pointer"
+            >
+              <option value="gemini">Google Gemini</option>
+              <option value="ollama">Ollama (Local)</option>
+            </select>
+          </div>
+
+          {/* Botão para alterar tema */}
           <button
             onClick={toggleTheme}
             className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
