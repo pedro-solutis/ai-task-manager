@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { X, Send, Bot } from 'lucide-react';
+import { ChatService } from '../../services/ChatService.js';
 
 export function ChatAssistant({ isOpen, onClose }) {
   const [messages, setMessages] = useState([{ role: 'bot', text: 'Olá! Como posso ajudar você a organizar suas tarefas hoje?' }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [chatId, setChatId] = useState(null);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -16,13 +18,9 @@ export function ChatAssistant({ isOpen, onClose }) {
     setIsLoading(true);
 
     try {
-      // Mock temporário da API
-      const text = await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(`Esta é uma resposta simulada para: "${userMessage}". A integração com o backend está desativada.`);
-        }, 1000);
-      });
-      setMessages(prev => [...prev, { role: 'bot', text }]);
+      const result = await ChatService.sendMessage(chatId, userMessage);
+      if (result.chatId) setChatId(result.chatId);
+      setMessages(prev => [...prev, { role: 'bot', text: result.chatResponse || result.text || 'Sem resposta do bot.' }]);
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { role: 'bot', text: 'Desculpe, ocorreu um erro de conexão.' }]);
