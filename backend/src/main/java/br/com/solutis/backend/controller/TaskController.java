@@ -6,15 +6,12 @@ import br.com.solutis.backend.dto.response.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,8 +29,11 @@ public class TaskController {
     @Operation(summary = "Find all tasks")
     @ApiResponse(responseCode = "200", description = "Successful operation")
     @GetMapping
-    public ResponseEntity<Page<TaskResponseDTO>> findAll(@PageableDefault(page=0, size=10, sort="dueDate", direction = Direction.ASC) Pageable pageable) {
-        return ResponseEntity.ok(taskService.findAll(pageable));
+    public ResponseEntity<List<TaskResponseDTO>> findAll(
+        @RequestParam (defaultValue = "dueDate") String sort,
+        @RequestParam (defaultValue = "ASC") String direction
+    ) {
+        return ResponseEntity.ok(taskService.findAll(sort, direction));
     }
 
     @Operation(summary = "Find task by ID")

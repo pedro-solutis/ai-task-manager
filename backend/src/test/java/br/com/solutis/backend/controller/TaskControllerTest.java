@@ -10,9 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -40,16 +37,16 @@ class TaskControllerTest {
     private TaskService taskService;
 
     @Test
-    @DisplayName("Should return paginated tasks")
+    @DisplayName("Should return all tasks")
     void shouldFindAll() throws Exception {
         TaskResponseDTO task = new TaskResponseDTO(UUID.randomUUID(), "T", "D", TaskStatus.TODO, TaskPriority.LOW, LocalDateTime.now().plusDays(1), LocalDateTime.now(), LocalDateTime.now(), null, List.of());
-        Page<TaskResponseDTO> page = new PageImpl<>(List.of(task));
+        List<TaskResponseDTO> list = List.of(task);
         
-        when(taskService.findAll(any(Pageable.class))).thenReturn(page);
+        when(taskService.findAll("dueDate", "ASC")).thenReturn(list);
 
         mockMvc.perform(get("/tasks"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].title").value("T"));
+                .andExpect(jsonPath("$[0].title").value("T"));
     }
 
     @Test

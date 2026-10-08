@@ -18,10 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -58,16 +54,16 @@ class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("Should find all tasks with pagination")
+    @DisplayName("Should find all tasks")
     void shouldFindAll() {
-        Page<Task> page = new PageImpl<>(List.of(task));
-        when(taskRepository.findAll(any(PageRequest.class))).thenReturn(page);
+        List<Task> list = List.of(task);
+        when(taskRepository.findAll(any(org.springframework.data.domain.Sort.class))).thenReturn(list);
 
-        Page<TaskResponseDTO> result = taskService.findAll(PageRequest.of(0, 10));
+        List<TaskResponseDTO> result = taskService.findAll("dueDate", "DESC");
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().getFirst().title()).isEqualTo("Test Title");
-        verify(taskRepository, times(1)).findAll(any(PageRequest.class));
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getFirst().title()).isEqualTo("Test Title");
+        verify(taskRepository, times(1)).findAll(any(org.springframework.data.domain.Sort.class));
     }
 
     @Test

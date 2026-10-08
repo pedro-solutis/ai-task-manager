@@ -2,8 +2,8 @@ package br.com.solutis.backend.repository;
 
 import br.com.solutis.backend.domain.entity.Task;
 import br.com.solutis.backend.domain.enums.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,11 +19,12 @@ import java.util.UUID;
 public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     @EntityGraph (attributePaths = {"parentTask", "subTasks"})
-    Page<Task> findAll(Pageable pageable);
+    List<Task> findAll(Sort sort);
 
     @EntityGraph (attributePaths = {"parentTask", "subTasks"})
     Optional<Task> findById(UUID id);
 
+    @EntityGraph (attributePaths = {"parentTask", "subTasks"})
     @Query(
         """
             SELECT t FROM Task t
@@ -31,6 +32,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
             AND (:priority IS NULL OR t.priority = :priority)
             AND (cast(:due_date as timestamp) IS NULL OR t.dueDate <= :due_date)
             AND (:excludeDone = false OR t.status != 'DONE')
+            AND (t.deleted IS FALSE)
         """
     )
     List<Task> searchTasks(
@@ -47,6 +49,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
             AND (:priority IS NULL OR t.priority = :priority)
             AND (cast(:due_date as timestamp) IS NULL OR t.dueDate <= :due_date)
             AND (:excludeDone = false OR t.status != 'DONE')
+            AND (t.deleted IS FALSE)
         """
     )
     long countTasks(

@@ -9,9 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -42,10 +39,10 @@ class TaskRepositoryTest {
     @Test
     @DisplayName("Should find all tasks not deleted")
     void shouldFindAllTasks() {
-        Page<Task> tasks = taskRepository.findAll(PageRequest.of(0, 10));
+        List<Task> tasks = taskRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "dueDate"));
         
-        assertThat(tasks.getContent()).hasSize(2);
-        assertThat(tasks.getContent()).extracting(Task::getTitle)
+        assertThat(tasks).hasSize(2);
+        assertThat(tasks).extracting(Task::getTitle)
                 .containsExactlyInAnyOrder("Task 1", "Task 2");
     }
 
@@ -59,9 +56,9 @@ class TaskRepositoryTest {
         Optional<Task> found = taskRepository.findById(task1.getId());
         assertThat(found).isEmpty();
         
-        Page<Task> tasks = taskRepository.findAll(PageRequest.of(0, 10));
-        assertThat(tasks.getContent()).hasSize(1);
-        assertThat(tasks.getContent().getFirst().getTitle()).isEqualTo("Task 2");
+        List<Task> tasks = taskRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "dueDate"));
+        assertThat(tasks).hasSize(1);
+        assertThat(tasks.getFirst().getTitle()).isEqualTo("Task 2");
     }
 
     @Test

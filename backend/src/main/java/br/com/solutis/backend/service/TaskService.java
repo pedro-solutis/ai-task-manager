@@ -10,8 +10,7 @@ import br.com.solutis.backend.dto.response.*;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +25,10 @@ public class TaskService {
     private final TaskRepository taskRepository;
 
     @Transactional(readOnly = true)
-    public Page<TaskResponseDTO> findAll(Pageable pageable) {
-        return taskRepository.findAll(pageable).map(this::mapToResponse);
+    public List<TaskResponseDTO> findAll(String sortColumn, String direction) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        Sort sort = Sort.by(sortDirection, sortColumn);
+        return taskRepository.findAll(sort).stream().map(this::mapToResponse).toList();
     }
 
     @Transactional(readOnly = true)
