@@ -57,6 +57,7 @@ export function KanbanBoard() {
           onClose={() => setSelectedTask(null)} 
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onUpdateTask={(updates) => setSelectedTask(prev => ({ ...prev, ...updates }))}
         />
       )}
 
