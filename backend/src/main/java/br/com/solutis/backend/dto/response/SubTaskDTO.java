@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import br.com.solutis.backend.domain.enums.TaskPriority;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,7 +21,7 @@ public record SubTaskDTO(
         TaskPriority priority,
         @Schema(description = "Due date of the sub-task", example = "2024-12-31T23:59:59")
         @NotNull(message = "Due date is required")
-        @Future(message = "Due date must be in the future")
+        @FutureOrPresent (message = "Due date must not be a past date")
         LocalDateTime dueDate
 ) {
 }

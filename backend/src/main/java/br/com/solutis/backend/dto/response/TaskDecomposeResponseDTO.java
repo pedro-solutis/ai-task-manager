@@ -11,7 +11,6 @@ public record TaskDecomposeResponseDTO(
         @Schema(description = "List of decomposed sub-tasks")
         @NotNull(message = "Subtasks list cannot be null")
         @NotEmpty(message = "Subtasks list cannot be empty")
-        @Valid
-        List<SubTaskDTO> subTasks
+        List<@Valid SubTaskDTO> subTasks
 ) {
 }
