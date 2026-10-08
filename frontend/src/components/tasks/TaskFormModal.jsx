@@ -5,7 +5,7 @@ import { AnalyzeButton } from './AnalyzeButton.jsx';
 import { DecomposeButton } from './DecomposeButton.jsx';
 import { TASK_PRIORITY } from '../../utils/constants.js';
 
-export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId }) {
+export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId, availableParents = [] }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -162,6 +162,23 @@ export function TaskFormModal({ isOpen, onClose, onSaved, initialData, parentId 
                 className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md px-3 py-2 text-slate-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tarefa Pai (Opcional)</label>
+            <select
+              name="parentId"
+              value={formData.parentId || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value ? parseInt(e.target.value) : null }))}
+              className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md px-3 py-2 text-slate-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            >
+              <option value="">Sem tarefa pai</option>
+              {availableParents
+                .filter(t => !initialData || t.id !== initialData.id)
+                .map(t => (
+                  <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700 mt-4 items-center">

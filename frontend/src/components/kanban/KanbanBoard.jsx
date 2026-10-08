@@ -9,11 +9,26 @@ export function KanbanBoard() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [parentTaskForNewSubtask, setParentTaskForNewSubtask] = useState(null);
-  const [subtasksToView, setSubtasksToView] = useState(null);
+  
+  // subtasksToView agora vai guardar o ID da task parent para podermos atualizar o modal em tempo real
+  const [viewingSubtasksParentId, setViewingSubtasksParentId] = useState(null);
   
   const [tasks, setTasks] = useState([
-    { id: 1, title: 'Criar estrutura do Kanban', description: 'Implementar layout base', priority: 'HIGH', dueDate: '2026-10-10T12:00:00Z', status: 'TODO', subtasks: [{ title: 'Subtarefa Exemplo', description: 'Teste de visualização' }] }
+    { 
+      id: 1, 
+      title: 'Criar estrutura do Kanban', 
+      description: 'Implementar layout base', 
+      priority: 'HIGH', 
+      dueDate: '2026-10-10T12:00:00Z', 
+      status: 'TODO', 
+      subtasks: [
+        { id: 101, title: 'Subtarefa Exemplo', description: 'Teste de visualização', status: 'TODO', parentId: 1 }
+      ] 
+    }
   ]);
+
+  const parentTaskForView = tasks.find(t => t.id === viewingSubtasksParentId);
+  const subtasksToView = parentTaskForView?.subtasks || null;
 
   const handleEdit = (task) => {
     setSelectedTask(null);
@@ -38,11 +53,55 @@ export function KanbanBoard() {
   };
 
   const handleViewSubtasks = (task) => {
-    setSubtasksToView(task.subtasks || []);
+    setViewingSubtasksParentId(task.id);
   };
 
   const handleCreateSubtask = (task) => {
     setParentTaskForNewSubtask(task);
+  };
+
+  const handleAdvanceSubtaskStatus = (subtask) => {
+    const nextStatus = subtask.status === 'TODO' ? 'IN_PROGRESS' : subtask.status === 'IN_PROGRESS' ? 'DONE' : 'DONE';
+    setTasks(prev => prev.map(t => {
+      if (t.id === subtask.parentId) {
+        return {
+          ...t,
+          subtasks: t.subtasks.map(st => st.id === subtask.id ? { ...st, status: nextStatus } : st)
+        };
+      }
+      return t;
+    }));
+  };
+
+  const handleRetrogressSubtaskStatus = (subtask) => {
+    const prevStatus = subtask.status === 'DONE' ? 'IN_PROGRESS' : subtask.status === 'IN_PROGRESS' ? 'TODO' : 'TODO';
+    setTasks(prev => prev.map(t => {
+      if (t.id === subtask.parentId) {
+        return {
+          ...t,
+          subtasks: t.subtasks.map(st => st.id === subtask.id ? { ...st, status: prevStatus } : st)
+        };
+      }
+      return t;
+    }));
+  };
+
+  const handleEditSubtask = (subtask) => {
+    // Fechar a modal de subtarefas e abrir a modal de edição de tarefa
+    setViewingSubtasksParentId(null);
+    setTaskToEdit(subtask);
+  };
+
+  const handleDeleteSubtask = (subtask) => {
+    setTasks(prev => prev.map(t => {
+      if (t.id === subtask.parentId) {
+        return {
+          ...t,
+          subtasks: t.subtasks.filter(st => st.id !== subtask.id)
+        };
+      }
+      return t;
+    }));
   };
 
   return (
@@ -85,6 +144,7 @@ export function KanbanBoard() {
         isOpen={!!taskToEdit || !!parentTaskForNewSubtask}
         initialData={taskToEdit}
         parentId={parentTaskForNewSubtask?.id}
+        availableParents={tasks}
         onClose={() => {
           setTaskToEdit(null);
           setParentTaskForNewSubtask(null);
@@ -98,9 +158,13 @@ export function KanbanBoard() {
 
       <DecomposeResultModal 
         isOpen={subtasksToView !== null}
-        onClose={() => setSubtasksToView(null)}
+        onClose={() => setViewingSubtasksParentId(null)}
         subtasks={subtasksToView}
         isCreating={false}
+        onAdvanceStatus={handleAdvanceSubtaskStatus}
+        onRetrogressStatus={handleRetrogressSubtaskStatus}
+        onEditSubtask={handleEditSubtask}
+        onDeleteSubtask={handleDeleteSubtask}
       />
     </>
   );
