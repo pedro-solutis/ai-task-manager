@@ -1,7 +1,22 @@
+import { useState } from 'react';
 import { X, Calendar, Flag, Pencil, Trash2 } from 'lucide-react';
+import { EnhanceButton } from './EnhanceButton.jsx';
+import { AnalyzeButton } from './AnalyzeButton.jsx';
+import { DecomposeButton } from './DecomposeButton.jsx';
 
-export function TaskDetailModal({ task, onClose, onEdit, onDelete }) {
+export function TaskDetailModal({ task, onClose, onEdit, onDelete, onUpdateTask }) {
+  const [aiLoading, setAiLoading] = useState(false);
+
   if (!task) return null;
+
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 'HIGH': return 'text-red-500';
+      case 'MEDIUM': return 'text-yellow-500';
+      case 'LOW': return 'text-green-500';
+      default: return 'text-gray-500';
+    }
+  };
 
   const statusColors = {
     TODO: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
@@ -37,7 +52,7 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete }) {
           <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             {task.priority && (
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <Flag className="h-4 w-4 text-orange-500" />
+                <Flag className={`h-3 w-3 ${getPriorityColor(task.priority)}`} />
                 <span>Prioridade: <span className="font-semibold">{task.priority}</span></span>
               </div>
             )}
@@ -49,6 +64,30 @@ export function TaskDetailModal({ task, onClose, onEdit, onDelete }) {
               </div>
             )}
           </div>
+          
+          {onUpdateTask && (
+            <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700 mt-4 items-center">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Ações de IA:</span>
+              <EnhanceButton 
+                formData={task} 
+                onUpdate={onUpdateTask} 
+                disabled={aiLoading} 
+                onLoadingChange={setAiLoading} 
+              />
+              <AnalyzeButton 
+                formData={task} 
+                onUpdate={onUpdateTask} 
+                disabled={aiLoading} 
+                onLoadingChange={setAiLoading} 
+              />
+              <DecomposeButton 
+                formData={task} 
+                onUpdate={onUpdateTask} 
+                disabled={aiLoading} 
+                onLoadingChange={setAiLoading} 
+              />
+            </div>
+          )}
         </div>
         
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800/50">
