@@ -13,8 +13,10 @@ graph TD
     subgraph Backend [Backend Central - Java 21]
         API --> SVC[TaskService: Regras de Negócio]
         API --> FAC[TaskAiFacade: Orquestrador de IA]
+        API --> CSVC[ChatService: Orquestrador do chat e modelos]
         FAC --> SVC
-        FAC --> AI_SVC[TaskAiService: Spring AI]
+        FAC --> AI_SVC[ChatClientFactory: Spring AI]
+        CSVC --> AI_SVC
     end
     
     subgraph Infraestrutura [Docker Compose]
@@ -22,8 +24,13 @@ graph TD
         LLM[Ollama Local]
     end
     
+    subgraph Provider [API de LLM Remotas]
+        GMN[Gemini]
+    end
+
     SVC -->|Spring Data JPA| DB
     AI_SVC -->|REST| LLM
+    AI_SVC -->|REST| GMN
 ```
 
 * **Frontend (React SPA):** Interface rica consumida diretamente do navegador, responsável pela interação drag-and-drop e pelas chamadas rest. Servida otimizada por um Nginx Alpine.
@@ -67,6 +74,10 @@ cd ai-task-manager
 ```bash
 docker compose up -d --build
 ```
+4. Faça a instalação do seu modelo local:
+```bash
+docker compose exec -it ollama ollama pull <NOME_DO_MODELO>
+```
 *(Na primeira vez que for executado, o Docker fará o download das imagens do PostgreSQL e Ollama, além de realizar o build de cada aplicação Spring e React, o que pode levar alguns minutos).*
 
 4. Acessos aos serviços em execução:
@@ -101,10 +112,11 @@ O sistema aplica estratégias avançadas para integração com LLMs (Modelos de 
 - Exclusão lógica (`Soft Delete`): Ao deletar uma tarefa no frontend, a API do backend apenas converte a flag `deleted = true`. O Hibernate está configurado com a anotação `@SQLRestriction("deleted = false")` no nível da entidade para omitir tarefas excluídas de consultas automaticamente, sem perda de dados históricos.
 
 ## Principais decisões arquiteturais
-- **Design Pattern Facade e Desacoplamento:** Para orquestrar o funcionamento da lógica de tarefas (CRUD) em conjunto com a Inteligência Artificial, foi implementado o Design Pattern *Facade* (`TaskAiFacade`). Esta fachada atua de forma coordenada entre os serviços (`TaskService` e a interface de IA), entregando aos Controllers uma abstração limpa de todo o fluxo. Além disso, a comunicação com a inteligência artificial acontece de forma genérica via uma interface comum (`TaskAiService`), garantindo baixo acoplamento com o provider atual (Ollama).
+- **Design Pattern Facade:** Para orquestrar o funcionamento da lógica de tarefas (CRUD) em conjunto com a Inteligência Artificial, foi implementado o Design Pattern *Facade* (`TaskAiFacade`). Esta fachada atua de forma coordenada entre os serviços (`TaskService` e a `ChatClientFactory`), entregando aos Controllers uma abstração limpa de todo o fluxo.
+- **Design Pattern Strategy:** Para permitir que fosse alternado em tempo de execução o provedor do modelo de Inteligência Artifical, foi implementado o Design Pattern *Strategy*(`ChatClientStrategy`). Ele atua como uma abstração para o `ChatClientFactory`, que atua como orquestrador desses modelos, permitindo que ao `ChatService` e ao `TaskAiFacade` acessar qualquer modelo de Inteligência Artificial configurado na aplicação de forma dinâmica. O `AiProviderService` atua como o gerenciador do modelo que o usuário quer utilizar e repassar essa informação ao `ChatClientFactory`. 
 - **Externalização de Prompts:** Os templates textuais de instrução do modelo de IA foram completamente abstraídos do código-fonte Java para arquivos isolados `.st` (String Templates) dentro da pasta *resources*, facilitando o ajuste fino do LLM sem necessidade de recompilar a aplicação.
 - **Validação Rica no Domínio:** A classe de entidade `Task.java` possui *guardrails* nativos de negócio (como impossibilidade de voltar um status de DONE para TODO, e validação contra vínculos parentais circulares). Evidencia-se a decisão de que a IA deve ser submissa às travas de segurança do Sistema Central, e nunca o inverso.
-- **Frontend purista sem Gerenciadores de Estado Globais:** Para diminuir a complexidade do cliente React, a aplicação abdica intencionalmente do uso de Redux ou Zustand. Todo compartilhamento de informações para a atualização do board Kanban e dos cartões acontece eficientemente pelo React via Prop Drilling e Native Hooks (`useState` e `useEffect`).
+- **Frontend sem Gerenciadores de Estado Globais:** Para diminuir a complexidade do cliente React, a aplicação abdica intencionalmente do uso de Redux ou Zustand. Todo compartilhamento de informações para a atualização do board Kanban e dos cartões acontece eficientemente pelo React via Prop Drilling e Native Hooks (`useState` e `useEffect`).
 - **Otimização Multi-stage no Docker:** Tanto o React quanto o Spring Boot utilizam a estratégia multi-stage build. Dependências pesadas como Maven e NPM só coexistem no estágio `build`. O container final de produção é executado em instâncias limpas (Nginx Alpine e JRE Eclipse Temurin), resultando em aplicações mais leves, seguras e portáteis.
 - **Autonomia da IA via Tool Calling:** Para prover contexto rico e em tempo real à IA, optou-se pela utilização do padrão de *Function/Tool Calling* fornecido pelo Spring AI. Com anotações `@Tool`, a IA consegue decidir ativamente consultar a base de dados (ex: "pesquisar tarefas") em vez de depender de grandes fluxos de injeção de contexto (RAG estático), tornando a interação mais dinâmica e precisa.
 - **Memória de Chat em Memória Temporária (RAM):** O histórico de conversação do assistente virtual foi implementado propositalmente utilizando o `InMemoryChatMemory`. Foi decidido que não fazia sentido onerar o banco de dados principal com o armazenamento persistente de logs de bate-papos livres. O histórico dura exatamente enquanto a sessão/aba estiver ativa, isolado por um `chatId` gerenciado pela camada web.
