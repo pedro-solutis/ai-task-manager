@@ -4,8 +4,7 @@ import br.com.solutis.backend.service.*;
 import br.com.solutis.backend.dto.response.*;
 import br.com.solutis.backend.dto.request.*;
 import br.com.solutis.backend.domain.enums.*;
-import br.com.solutis.backend.ai.TaskAiService;
-
+import br.com.solutis.backend.strategy.ai.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class TaskAiFacade {
 
     private final TaskService taskService;
-    private final TaskAiService taskAiService;    
+    private final ChatClientFactory chatClientFactory;    
 
     @Transactional(readOnly = true)
     public TaskEnhancedResponseDTO enhanceById(UUID taskId){
@@ -30,7 +29,8 @@ public class TaskAiFacade {
             task.title(),
             task.description()
         );
-        return taskAiService.enhanceTask(request);
+        
+        return chatClientFactory.enhanceTask(request);
         
     }
 
@@ -43,7 +43,7 @@ public class TaskAiFacade {
             task.priority().toString(),
             task.dueDate()
         );
-        return taskAiService.analyzeTask(request);
+        return chatClientFactory.analyzeTask(request);
     }
 
     @Transactional 
@@ -56,20 +56,20 @@ public class TaskAiFacade {
             parent.description(),
             parent.dueDate()
         );
-        TaskDecomposeResponseDTO decomposition = taskAiService.decomposeTask(request);
+        TaskDecomposeResponseDTO decomposition = chatClientFactory.decomposeTask(request);
         return taskService.saveDecomposedTasks(taskId, decomposition);
     }
 
     public TaskEnhancedResponseDTO enhancePreview(TaskEnhanceRequestDTO request){
-        return taskAiService.enhanceTask(request);
+        return chatClientFactory.enhanceTask(request);
     }
 
     public TaskAnalysisResponseDTO analyzePreview(TaskAnalysisRequestDTO request){
-        return taskAiService.analyzeTask(request);
+        return chatClientFactory.analyzeTask(request);
     }
 
     public TaskDecomposeResponseDTO decomposePreview(TaskDecomposeRequestDTO request){
-        return taskAiService.decomposeTask(request);
+        return chatClientFactory.decomposeTask(request);
     }
 
 }

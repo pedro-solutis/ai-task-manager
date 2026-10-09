@@ -1,6 +1,6 @@
 package br.com.solutis.backend.facade.ai;
 
-import br.com.solutis.backend.ai.TaskAiService;
+import br.com.solutis.backend.strategy.ai.*;
 import br.com.solutis.backend.domain.enums.TaskPriority;
 import br.com.solutis.backend.domain.enums.TaskStatus;
 import br.com.solutis.backend.dto.request.TaskAnalysisRequestDTO;
@@ -32,7 +32,7 @@ class TaskAiFacadeTest {
     private TaskService taskService;
 
     @Mock
-    private TaskAiService taskAiService;
+    private ChatClientFactory chatClientFactory;
 
     @InjectMocks
     private TaskAiFacade taskAiFacade;
@@ -62,12 +62,12 @@ class TaskAiFacadeTest {
     void shouldEnhanceById() {
         TaskEnhancedResponseDTO enhancedDTO = new TaskEnhancedResponseDTO("New Title", "New Desc");
         when(taskService.findById(taskId)).thenReturn(mockTaskResponse);
-        when(taskAiService.enhanceTask(any(TaskEnhanceRequestDTO.class))).thenReturn(enhancedDTO);
+        when(chatClientFactory.enhanceTask(any(TaskEnhanceRequestDTO.class))).thenReturn(enhancedDTO);
 
         TaskEnhancedResponseDTO result = taskAiFacade.enhanceById(taskId);
 
         assertThat(result.title()).isEqualTo("New Title");
-        verify(taskAiService, times(1)).enhanceTask(any(TaskEnhanceRequestDTO.class));
+        verify(chatClientFactory, times(1)).enhanceTask(any(TaskEnhanceRequestDTO.class));
     }
 
     @Test
@@ -86,12 +86,12 @@ class TaskAiFacadeTest {
     void shouldAnalyzeById() {
         TaskAnalysisResponseDTO analysisDTO = new TaskAnalysisResponseDTO(TaskPriority.HIGH, br.com.solutis.backend.domain.enums.TaskComplexity.HIGH, 5, "Reasoning");
         when(taskService.findById(taskId)).thenReturn(mockTaskResponse);
-        when(taskAiService.analyzeTask(any(TaskAnalysisRequestDTO.class))).thenReturn(analysisDTO);
+        when(chatClientFactory.analyzeTask(any(TaskAnalysisRequestDTO.class))).thenReturn(analysisDTO);
 
         TaskAnalysisResponseDTO result = taskAiFacade.analyzeById(taskId);
 
         assertThat(result.priority()).isEqualTo(TaskPriority.HIGH);
-        verify(taskAiService, times(1)).analyzeTask(any(TaskAnalysisRequestDTO.class));
+        verify(chatClientFactory, times(1)).analyzeTask(any(TaskAnalysisRequestDTO.class));
     }
 
     @Test
@@ -102,7 +102,7 @@ class TaskAiFacadeTest {
         ));
         
         when(taskService.findById(taskId)).thenReturn(mockTaskResponse);
-        when(taskAiService.decomposeTask(any(TaskDecomposeRequestDTO.class))).thenReturn(decomposeDTO);
+        when(chatClientFactory.decomposeTask(any(TaskDecomposeRequestDTO.class))).thenReturn(decomposeDTO);
         
         TaskResponseDTO subTaskResponse = new TaskResponseDTO(UUID.randomUUID(), "Sub 1", "Desc", TaskStatus.TODO, TaskPriority.LOW, LocalDateTime.now(), null, null, taskId, List.of());
         when(taskService.saveDecomposedTasks(eq(taskId), eq(decomposeDTO))).thenReturn(List.of(subTaskResponse));
